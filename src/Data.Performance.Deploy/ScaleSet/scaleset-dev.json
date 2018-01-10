@@ -1,0 +1,40 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "deploymentNames": {
+        "value": {
+            "env": "d",
+            "app": "data",
+            "svc": "ptestvmm"
+        }
+      },
+      "vmSku": {
+        "value": "Standard_A3"
+      },
+      "windowsOSVersion": {
+        "value": "2016-Datacenter"
+      },
+      "dnsName": {
+        "value": "datad-pvmss-ws"
+      },
+      "instanceCount": {
+        "value": 1
+      },
+      "adminUsername": {
+        "value": "vmssadmin"
+      },
+      "adminPassword": {
+        "value": "SOMEPASSWORDTHATISGENERATED"
+      },
+      "powershelldscZip": {
+        "value": "/DSC/IISInstall.ps1.zip"
+      },
+      "webDeployPackage": {
+        "value": "/WebDeploy/DefaultASPWebApp.v1.0.zip"
+      },
+      "powershelldscUpdateTagVersion": {
+        "value": "1.0"
+      }
+    }
+}

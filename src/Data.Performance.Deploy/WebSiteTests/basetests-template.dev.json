@@ -1,0 +1,17 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "deploymentNames": {
+      "value": {
+        "env": "d",
+        "app": "data",
+        "svc": "ptest"
+      }
+    },
+    "web_HostingPlan_SKU_Name": { "value": "S3" },
+    "web_HostingPlan_SKU_Tier": { "value": "Standard" },
+    "web_HostingPlan_SKU_Family": { "value": "S" },
+    "web_HostingPlan_SKU_Capacity": { "value": 1 }
+  }
+}
