@@ -31,7 +31,7 @@
         "value": "/DSC/IISInstall.ps1.zip"
       },
       "webDeployPackage": {
-        "value": "/WebDeploy/DefaultASPWebApp.v1.0.zip"
+        "value": "/WebDeploy/Data.Performance.AspNetCore2.WebAPI.zip"
       },
       "powershelldscUpdateTagVersion": {
         "value": "1.0"
