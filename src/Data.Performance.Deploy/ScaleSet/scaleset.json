@@ -59,7 +59,7 @@
         "metadata": {
           "description": "The base URI where artifacts required by this template are located. For example, if stored on a public GitHub repo, you'd use the following URI: https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/201-vmss-windows-webapp-dsc-autoscale."
         },
-        "defaultValue": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/201-vmss-windows-webapp-dsc-autoscale"
+        "defaultValue": "https://github.com/ploegert/Performance.AspNetCore/blob/master/src/Data.Performance.Deploy/ScaleSet"
       },
       "_artifactsLocationSasToken": {
         "type": "securestring",

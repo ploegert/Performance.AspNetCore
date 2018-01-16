@@ -30,6 +30,9 @@
       "powershelldscZip": {
         "value": "/DSC/IISInstall.ps1.zip"
       },
+      "_artifactsLocation": {
+        "value": "https://raw.githubusercontent.com/ploegert/Performance.AspNetCore/master/src/Data.Performance.Deploy/ScaleSet"
+      },
       "webDeployPackage": {
         "value": "/WebDeploy/Data.Performance.AspNetCore2.WebAPI.zip"
       },
