@@ -119,8 +119,36 @@ Configuration InstallIIS
     }
 
     $securityApiPath = "$env:SystemDrive\inetpub\wwwroot\SecurityAPI";
-    $packageContent = "$PSScriptRoot\..\SecurityAPI"
-    $packageContent= "C:\WindowsAzure\Applications\WebApplication.zip" 
+    # $packageContent = "$PSScriptRoot\..\SecurityAPI"
+    $packageContent= "C:\WindowsAzure\Applications\WebApplication.zip"
+    $poolName = "SecurityApiAppPool";
+
+    Script StopAppPool
+    {
+      TestScript = {
+        Import-Module WebAdministration;
+        (Get-ChildItem IIS:\AppPools | where Name -EQ 'SecurityApiAppPool') -EQ $null;
+      }
+      SetScript = {
+				Import-Module WebAdministration;
+
+				if ((Get-WebAppPoolState 'SecurityApiAppPool').Value -ne 'Stopped')
+				{
+					Stop-WebAppPool 'SecurityApiAppPool';
+					$state = (Get-WebAppPoolState 'SecurityApiAppPool').Value;
+
+					$counter = 1;
+					do
+					{
+						$state = (Get-WebAppPoolState 'SecurityApiAppPool').Value;
+						$counter++;
+						Start-Sleep -Milliseconds 500;
+					}
+					while($state -ne 'Stopped' -and $counter -le 20)
+				}
+			}
+			GetScript = { return @{} }
+		}
 
   }
 }
