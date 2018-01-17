@@ -1,12 +1,14 @@
+install-Module -Name xWebAdministration -Repository PSGallery -Force -Confirm:$False
+
 Configuration InstallIIS
 {
-
-    #Param ( $WebDeployPackagePath )
+    Param ( [string] $nodeName, $WebDeployPackagePath )
 
     Import-DscResource -ModuleName PSDesiredStateConfiguration
     Import-DscResource -ModuleName xWebAdministration
 
-    Node localhost
+    #Node localhost
+    Node $nodeName
     {
 
         $WebSiteName = "SecurityAPI"
@@ -205,3 +207,6 @@ Configuration InstallIIS
 
     }
 }
+
+#InstallIIS -OutputPath "${env:ProgramFiles(x86)}\WindowsPowerShell\Configuration";
+#Start-DscConfiguration -Path "${env:ProgramFiles(x86)}\WindowsPowerShell\Configuration" -Wait -Verbose -Force;
