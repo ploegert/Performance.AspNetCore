@@ -1,4 +1,5 @@
 Configuration InstallIIS
+# Configuration Main
 {
 
     #Param ( $WebDeployPackagePath )
@@ -20,56 +21,6 @@ Configuration InstallIIS
         $CoreHostInstall_Url = "https://aka.ms/dotnetcore-2-windowshosting"
         $CoreHostInstall_Path = "C:\WindowsAzure\Applications\DotNetCore-WindowsHosting.exe"
 
-
-
-        WindowsFeature WebServerRole {
-            Name   = "Web-Server"
-            Ensure = "Present"
-        }
-        WindowsFeature WebManagementConsole {
-            Name   = "Web-Mgmt-Console"
-            Ensure = "Present"
-        }
-        WindowsFeature WebManagementService {
-            Name   = "Web-Mgmt-Service"
-            Ensure = "Present"
-        }
-        WindowsFeature ASPNet45 {
-            Name   = "Web-Asp-Net45"
-            Ensure = "Present"
-        }
-        WindowsFeature HTTPRedirection {
-            Name   = "Web-Http-Redirect"
-            Ensure = "Present"
-        }
-        WindowsFeature CustomLogging {
-            Name   = "Web-Custom-Logging"
-            Ensure = "Present"
-        }
-        WindowsFeature LogginTools {
-            Name   = "Web-Log-Libraries"
-            Ensure = "Present"
-        }
-        WindowsFeature RequestMonitor {
-            Name   = "Web-Request-Monitor"
-            Ensure = "Present"
-        }
-        WindowsFeature Tracing {
-            Name   = "Web-Http-Tracing"
-            Ensure = "Present"
-        }
-        WindowsFeature BasicAuthentication {
-            Name   = "Web-Basic-Auth"
-            Ensure = "Present"
-        }
-        WindowsFeature WindowsAuthentication {
-            Name   = "Web-Windows-Auth"
-            Ensure = "Present"
-        }
-        WindowsFeature ApplicationInitialization {
-            Name   = "Web-AppInit"
-            Ensure = "Present"
-        }
 
         #Pre-Reqs
         Script InstallNetCoreSDK {
@@ -181,7 +132,7 @@ Configuration InstallIIS
 
         xWebAppPool SecurityAPIAppPool
         {
-            Name                  = $WebPoolName
+            Name                  = 'SecurityApiAppPool'
             State                 = 'Started'
             autoStart             = $true
             enable32BitAppOnWin64 = $true
@@ -196,12 +147,15 @@ Configuration InstallIIS
 
         xWebApplication SecurityApi
         {
-            Name         = $WebSiteName
+            Name         = 'SecurityAPI'
             Website      = 'Default Web Site'
-            WebAppPool   = $WebPoolName
+            WebAppPool   = 'SecurityApiAppPool'
             PhysicalPath = $WebVirtDirectory
             Ensure       = 'Present'
         }
 
     }
 }
+
+InstallIIS -OutputPath "${env:ProgramFiles(x86)}\WindowsPowerShell\Configuration";
+Start-DscConfiguration -Path "${env:ProgramFiles(x86)}\WindowsPowerShell\Configuration" -Wait -Verbose -Force;
