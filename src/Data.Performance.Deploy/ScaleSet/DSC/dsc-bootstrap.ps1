@@ -1,0 +1,1 @@
+install-Module -Name xWebAdministration -Repository PSGallery -Force -Confirm:$False
