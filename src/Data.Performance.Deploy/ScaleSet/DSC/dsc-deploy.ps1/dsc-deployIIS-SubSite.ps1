@@ -2,7 +2,10 @@ install-Module -Name xWebAdministration -Repository PSGallery -Force -Confirm:$F
 
 Configuration ConfigureIIS
 {
-    Param ( [string] $nodeName, $WebDeployPackagePath )
+    Param ( [string] $nodeName, 
+            [string] $WebDeployPackagePath, 
+            [string] $WebSiteName = "TestSite",
+            [string] $WebPoolName = "SecurityApiAppPool" )
 
     Import-DscResource -ModuleName PSDesiredStateConfiguration
     Import-DscResource -ModuleName xWebAdministration
@@ -13,11 +16,8 @@ Configuration ConfigureIIS
 
         $WebDefaultSite_VirtDirectory = "$env:SystemDrive\inetpub\wwwroot"
         $WebDefaultSite_Name = 'Default Web Site'
-
-        $WebSiteName = "SecurityAPI"
         $WebVirtDirectory = "$env:SystemDrive\inetpub\wwwroot\$WebSiteName"
-        $WebPoolName = "SecurityApiAppPool"
-        #$WebDeployPackagePath = "https://raw.githubusercontent.com/ploegert/Performance.AspNetCore/master/src/Data.Performance.Deploy/ScaleSet/WebDeploy/Data.Performance.AspNetCore2.WebAPI.zip"
+        
         $packageContent = "C:\WindowsAzure\Applications\WebApplication.zip"
         $packageStaging = "C:\WindowsAzure\Applications\WebApplication\"
         
@@ -195,53 +195,42 @@ Configuration ConfigureIIS
 			)
 		}
 
-        File Copy {
-            SourcePath      = $packageStaging
-            DestinationPath = $WebDefaultSite_VirtDirectory
-            Recurse         = $true
-            Type            = 'Directory'
-            MatchSource     = $true
-            Checksum        = 'SHA-256'
-            Force           = $true
-            Ensure          = 'Present'
-        }
-        
         # Sub site located under default folder configuration
         #=============================================================
-        # File Copy {
-        #      SourcePath      = $packageStaging
-        #      DestinationPath = $WebVirtDirectory
-        #      Recurse         = $true
-        #      Type            = 'Directory'
-        #      MatchSource     = $true
-        #      Checksum        = 'SHA-256'
-        #      Force           = $true
-        #      Ensure          = 'Present'
-        #  }
+        File Copy {
+             SourcePath      = $packageStaging
+             DestinationPath = $WebVirtDirectory
+             Recurse         = $true
+             Type            = 'Directory'
+             MatchSource     = $true
+             Checksum        = 'SHA-256'
+             Force           = $true
+             Ensure          = 'Present'
+         }
 
-        # xWebAppPool SecurityAPIAppPool
-        # {
-        #     Name                  = $WebPoolName
-        #     State                 = 'Started'
-        #     autoStart             = $true
-        #     enable32BitAppOnWin64 = $true
-        #     managedPipelineMode   = 'Integrated'
-        #     managedRuntimeVersion = 'v4.0'
-        #     startMode             = 'OnDemand'
-        #     identityType          = 'ApplicationPoolIdentity'
-        #     idleTimeout           = (New-TimeSpan -Minutes 0).ToString()
-        #     maxProcesses          = 1
-        #     Ensure                = 'Present'
-        # }
+        xWebAppPool SecurityAPIAppPool
+        {
+            Name                  = $WebPoolName
+            State                 = 'Started'
+            autoStart             = $true
+            enable32BitAppOnWin64 = $true
+            managedPipelineMode   = 'Integrated'
+            managedRuntimeVersion = 'v4.0'
+            startMode             = 'OnDemand'
+            identityType          = 'ApplicationPoolIdentity'
+            idleTimeout           = (New-TimeSpan -Minutes 0).ToString()
+            maxProcesses          = 1
+            Ensure                = 'Present'
+        }
 
-        # xWebApplication SecurityApi
-        # {
-        #     Name         = $WebSiteName
-        #     Website      = 'Default Web Site'
-        #     WebAppPool   = $WebPoolName
-        #     PhysicalPath = $WebVirtDirectory
-        #     Ensure       = 'Present'
-        # }
+        xWebApplication SecurityApi
+        {
+            Name         = $WebSiteName
+            Website      = 'Default Web Site'
+            WebAppPool   = $WebPoolName
+            PhysicalPath = $WebVirtDirectory
+            Ensure       = 'Present'
+        }
 
     }
 }
