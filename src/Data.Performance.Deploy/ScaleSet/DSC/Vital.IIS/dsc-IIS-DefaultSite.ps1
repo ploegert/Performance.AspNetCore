@@ -141,16 +141,16 @@ Configuration ConfigureIIS
             GetScript  = { return @{} }
         }
 
-        script destinationfoldercleanup {
-            testscript = { return -not (test-path $using:WebVirtDirectory) }
-            setscript  = {
-                #file resource does not delete files. grrrrrrr
-                $sourcefiles = get-childitem $using:packageStaging -recurse;
-                $destinationfiles = get-childitem $using:WebVirtDirectory -recurse;
-                compare-object $sourcefiles $destinationfiles | where sideindicator -eq '=>' | select -expandproperty inputobject | select -expandproperty fullname | sort -descending | remove-item -recurse -force;
-            }
-            getscript  =	{ return @{} }
-        }
+        # script destinationfoldercleanup {
+        #     testscript = { return -not (test-path $using:WebVirtDirectory) }
+        #     setscript  = {
+        #         #file resource does not delete files. grrrrrrr
+        #         $sourcefiles = get-childitem $using:packageStaging -recurse;
+        #         $destinationfiles = get-childitem $using:WebVirtDirectory -recurse;
+        #         compare-object $sourcefiles $destinationfiles | where sideindicator -eq '=>' | select -expandproperty inputobject | select -expandproperty fullname | sort -descending | remove-item -recurse -force;
+        #     }
+        #     getscript  =	{ return @{} }
+        # }
 
         #File DownloadPackage {
         #  Ensure = "Present"
