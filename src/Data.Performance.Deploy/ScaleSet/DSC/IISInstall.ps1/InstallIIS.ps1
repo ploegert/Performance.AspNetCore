@@ -1,4 +1,4 @@
-install-Module -Name xWebAdministration -Repository PSGallery -Force -Confirm:$False
+#install-Module -Name xWebAdministration -Repository PSGallery -Force -Confirm:$False
 
 Configuration InstallIIS
 {
