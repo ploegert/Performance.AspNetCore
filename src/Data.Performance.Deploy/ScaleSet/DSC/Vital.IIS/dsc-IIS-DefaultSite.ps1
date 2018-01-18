@@ -1,11 +1,11 @@
-install-Module -Name xWebAdministration -Repository PSGallery -Force -Confirm:$False
+#install-Module -Name xWebAdministration -Repository PSGallery -Force -Confirm:$False
 
 Configuration ConfigureIIS
 {
     Param ( [string] $nodeName, $WebDeployPackagePath )
 
     Import-DscResource -ModuleName PSDesiredStateConfiguration
-    Import-DscResource -ModuleName xWebAdministration
+    #Import-DscResource -ModuleName xWebAdministration
 
     #Node localhost
     Node $nodeName
@@ -159,44 +159,44 @@ Configuration ConfigureIIS
         #  DestinationPath = $WebVirtDirectory
         #}
 
-		xWebsite WebSiteConfig
-		{ 
-			Name = $WebSiteName
-			Ensure = 'Present'
-			State = 'Started'
-			PhysicalPath = $WebVirtDirectory
-			BindingInfo = @(
-				MSFT_xWebBindingInformation
-				{
-					HostName = '*'
-					Protocol = 'HTTP'
-					Port = 80
-				}
-				# MSFT_xWebBindingInformation
-				# {
-				# 	HostName = '*'
-				# 	Protocol = 'HTTPS'
-				# 	Port = 443
-				# 	CertificateThumbprint = $thumbprint
-				# 	CertificateStoreName = 'My'
-				# }
-			)
-        }
+		# xWebsite WebSiteConfig
+		# { 
+		# 	Name = $WebSiteName
+		# 	Ensure = 'Present'
+		# 	State = 'Started'
+		# 	PhysicalPath = $WebVirtDirectory
+		# 	BindingInfo = @(
+		# 		MSFT_xWebBindingInformation
+		# 		{
+		# 			HostName = '*'
+		# 			Protocol = 'HTTP'
+		# 			Port = 80
+		# 		}
+		# 		# MSFT_xWebBindingInformation
+		# 		# {
+		# 		# 	HostName = '*'
+		# 		# 	Protocol = 'HTTPS'
+		# 		# 	Port = 443
+		# 		# 	CertificateThumbprint = $thumbprint
+		# 		# 	CertificateStoreName = 'My'
+		# 		# }
+		# 	)
+        # }
         
-        xWebAppPool AppPoolConfig
-        {
-            Name                  = $WebPoolName
-            State                 = 'Started'
-            autoStart             = $true
-            enable32BitAppOnWin64 = $true
-            managedPipelineMode   = 'Integrated'
-            managedRuntimeVersion = 'v4.0'
-            startMode             = 'OnDemand'
-            identityType          = 'ApplicationPoolIdentity'
-            idleTimeout           = (New-TimeSpan -Minutes 0).ToString()
-            maxProcesses          = 1
-            Ensure                = 'Present'
-        }
+        # xWebAppPool AppPoolConfig
+        # {
+        #     Name                  = $WebPoolName
+        #     State                 = 'Started'
+        #     autoStart             = $true
+        #     enable32BitAppOnWin64 = $true
+        #     managedPipelineMode   = 'Integrated'
+        #     managedRuntimeVersion = 'v4.0'
+        #     startMode             = 'OnDemand'
+        #     identityType          = 'ApplicationPoolIdentity'
+        #     idleTimeout           = (New-TimeSpan -Minutes 0).ToString()
+        #     maxProcesses          = 1
+        #     Ensure                = 'Present'
+        # }
 
         File Copy {
             SourcePath      = $packageStaging
@@ -209,6 +209,29 @@ Configuration ConfigureIIS
             Ensure          = 'Present'
         }
         
+        Script StartAppPool {
+            TestScript = {
+                Import-Module WebAdministration;
+                (Get-ChildItem IIS:\AppPools | where Name -EQ $WebPoolName) -EQ $null;
+            }
+            SetScript  = {
+                Import-Module WebAdministration;
+
+                if ((Get-WebAppPoolState $WebPoolName).Value -eq 'Stopped') {
+                    Start-WebAppPool $WebPoolName;
+                    $state = (Get-WebAppPoolState $WebPoolName).Value;
+
+                    $counter = 1;
+                    do {
+                        $state = (Get-WebAppPoolState $WebPoolName).Value;
+                        $counter++;
+                        Start-Sleep -Milliseconds 500;
+                    }
+                    while ($state -eq 'Stopped' -and $counter -le 20)
+                }
+            }
+            GetScript  = { return @{} }
+        }
 
     }
 }
