@@ -200,7 +200,7 @@ Configuration ConfigureIIS
 
         File Copy {
             SourcePath      = $packageStaging
-            DestinationPath = $WebDefaultSite_VirtDirectory
+            DestinationPath = $WebVirtDirectory
             Recurse         = $true
             Type            = 'Directory'
             MatchSource     = $true
