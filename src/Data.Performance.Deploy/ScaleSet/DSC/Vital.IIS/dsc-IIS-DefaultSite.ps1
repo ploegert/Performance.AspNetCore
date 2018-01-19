@@ -78,7 +78,9 @@ Configuration ConfigureIIS
             GetScript  = { @{ Result = "" } }
             TestScript = { $false }
             SetScript  = {
+                Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreSDK]", "Executing CoreDskInstall","is starting execution: Src:==>$($Using:CoreSdkInstall_Url).")
                 &([scriptblock]::Create((Invoke-WebRequest -useb $Using:CoreSdkInstall_Url))) #<additional install-script args>
+                Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreSDK]", "Executing msiexec","is done.")
             }
         }
 
@@ -88,13 +90,22 @@ Configuration ConfigureIIS
             SetScript  = {
                 #&([scriptblock]::Create((Invoke-WebRequest -useb 'https://dot.net/v1/dotnet-install.ps1'))) #<additional install-script args>
                 
-                $WebClient = New-Object -TypeName System.Net.WebClient
-                $WebClient.DownloadFile($Using:CoreHostInstall_Url, $Using:CoreHostInstall_Path)
+                Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Downlaoding CoreHostInstall","is starting execution: Src:==>$($Using:CoreHostInstall_Url), Dst:==>$($Using:CoreHostInstall_Path)")
+                $WebClient = New-Object -TypeName System.Net.WebClient;
+                $WebClient.DownloadFile($($Using:CoreHostInstall_Url, $($Using:CoreHostInstall_Path)));
+                Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Downlaoding CoreHostInstall","is done.") 
 
-                msiexec /package $pkg /quiet
+                Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Executing msiexec","is starting execution: PkgName==>$($Using:CoreHostInstall_Path)")
+                msiexec /package $($Using:CoreHostInstall_Path) /quiet
+                Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Executing msiexec","is done.")
 
+                Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Stopping IIS","...")
                 net stop was /y;
+                Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Stopping IIS","is done.")
+
+                Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Starting IIS","...")
                 net start w3svc;
+                Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Starting IIS","is done.")
             }
         }
         
