@@ -1,0 +1,52 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "deploymentNames": {
+        "value": {
+            "env": "d",
+            "app": "data",
+            "svc": "vmss-core11"
+        }
+      },
+      "vmSku": {
+        "value": "Standard_A3"
+      },
+      "windowsOSVersion": {
+        "value": "2016-Datacenter"
+      },
+      "dnsName": {
+        "value": "datad-vmss-core11"
+      },
+      "instanceCount": {
+        "value": 1
+      },
+      "adminUsername": {
+        "value": "vmssadmin"
+      },
+      "adminPassword": {
+        "value": "PvYw3waXSEaLJ54p"
+      },
+      "powershelldsc_Zip": {
+        "value": "/DSC/Vital.IIS.zip"
+      },
+      "powershelldsc_script": {
+        "value":"dsc-IIS-DefaultSite.ps1" 
+      },
+      "powershelldsc_function": {
+        "value":"ConfigureIIS" 
+      },
+      "_artifactsLocation": {
+        "value": "https://raw.githubusercontent.com/ploegert/Performance.AspNetCore/master/src/Data.Performance.Deploy/ScaleSet"
+      },
+      "webDeployPackage": {
+        "value": "/WebDeploy/Data.Performance.AspNetCore11.WebAPI.zip"
+      },
+      "powershelldsc_UpdateTagVersion": {
+        "value": "1.24"
+      },
+      "powershelldsc_Bootstrap_FullPath": {
+        "value":"https://raw.githubusercontent.com/ploegert/Performance.AspNetCore/master/src/Data.Performance.Deploy/ScaleSet/DSC/dsc-bootstrap.ps1"
+      }
+    }
+}

@@ -120,11 +120,13 @@ $app = "mem"
 set-sub $sub
 
 
+
+############################ CORE 2.0 #######################################
 $dev = @{
-	'ResourceGroupName'= "datad-ptestvmm-rg";
+	'ResourceGroupName'= "datad-vmss-core2-rg";
 	'ResourceGroupLocation' ="East US 2"
 	'TemplateFile'=".\scaleset.json";
-	'TemplateParametersFile'= ".\scaleset-dev.json";
+	'TemplateParametersFile'= ".\scaleset-core2.json";
 }
 
 
@@ -138,6 +140,52 @@ if((Test-Path ($vars.TemplateFile)) -and (Test-Path ($vars.TemplateParametersFil
 }
 else
 	{ throw "Rutrow scrappy. Your file paths do not exist. `nTemplate:$($vars.TemplateFile) `nParmFile:$($vars.TemplateParametersFile) "}
+
+
+break
+
+############################ CORE 1.1 #######################################	
+$dev = @{
+	'ResourceGroupName'= "datad-vmss-core11-rg";
+	'ResourceGroupLocation' ="East US 2"
+	'TemplateFile'=".\scaleset.json";
+	'TemplateParametersFile'= ".\scaleset-core11.json";
+}
+
+
+$vars = $dev
+$vars | out-string
+
+if((Test-Path ($vars.TemplateFile)) -and (Test-Path ($vars.TemplateParametersFile)))
+{ 
+	#. ./deploy.ps1 @vars
+	Do-AzureDeployRG @vars
+}
+else
+	{ throw "Rutrow scrappy. Your file paths do not exist. `nTemplate:$($vars.TemplateFile) `nParmFile:$($vars.TemplateParametersFile) "}
+
+
+############################ CORE netfx #######################################	
+$dev = @{
+	'ResourceGroupName'= "datad-vmss-core461-rg";
+	'ResourceGroupLocation' ="East US 2"
+	'TemplateFile'=".\scaleset.json";
+	'TemplateParametersFile'= ".\scaleset-core461.json";
+}
+
+
+$vars = $dev
+$vars | out-string
+
+if((Test-Path ($vars.TemplateFile)) -and (Test-Path ($vars.TemplateParametersFile)))
+{ 
+	#. ./deploy.ps1 @vars
+	Do-AzureDeployRG @vars
+}
+else
+	{ throw "Rutrow scrappy. Your file paths do not exist. `nTemplate:$($vars.TemplateFile) `nParmFile:$($vars.TemplateParametersFile) "}
+
+
 
 
 

@@ -102,7 +102,15 @@
       "metadata": {
         "description": "The module from the scrip that will get executed when DSC Runs."
       }
+    },
+    "powershelldsc_Bootstrap_FullPath": {
+      "type": "string",
+      "defaultValue": "https://raw.githubusercontent.com/ploegert/Performance.AspNetCore/master/src/Data.Performance.Deploy/ScaleSet/DSC/dsc-bootstrap.ps1", 
+      "metadata": {
+        "description": "The script that will pre-load required modules before DSC Runs."
+      }
     }
+    
 
   },
   "variables": {
@@ -316,12 +324,48 @@
           },
           "extensionProfile": {
             "extensions": [
+              // Script Execution
+              // {
+              //   "name": "customScript",
+              //   "properties": {
+              //     "publisher": "Microsoft.Compute",
+              //     "settings": {
+              //       "fileUris": ["[parameters('powershelldsc_Bootstrap_FullPath')]" ]
+              //     },
+              //     "typeHandlerVersion": "1.9",
+              //     "autoUpgradeMinorVersion": true,
+              //     "protectedSettings": {
+              //       "commandToExecute": "powershell -ExecutionPolicy Unrestricted -File dsc-bootstrap.ps1"
+              //     },
+              //     "type": "CustomScriptExtension"
+              //   }
+              // },
+              // DSC Configuration
+              // {
+              //   "name": "Microsoft.Powershell.DSC",
+              //   "properties": {
+              //     "publisher": "Microsoft.Powershell",
+              //     "type": "DSC",
+              //     "typeHandlerVersion": "2.21",
+              //     "autoUpgradeMinorVersion": true,
+              //     "forceUpdateTag": "[parameters('powershelldsc_UpdateTagVersion')]",
+              //     "settings": {
+              //       "configuration": {
+              //         "url": "https://raw.githubusercontent.com/ploegert/Performance.AspNetCore/master/src/Data.Performance.Deploy/ScaleSet/DSC/Vital.PSModules.zip",
+              //         "script": "dsc-deploy.ps1",
+              //         "function": "SetupVitalModules"
+              //       },
+              //       "configurationArguments": {}
+              //     }
+              //   }
+              // },
+              // DSC Configuration
               {
                 "name": "Microsoft.Powershell.DSC",
                 "properties": {
                   "publisher": "Microsoft.Powershell",
                   "type": "DSC",
-                  "typeHandlerVersion": "2.20",
+                  "typeHandlerVersion": "2.21",
                   "autoUpgradeMinorVersion": true,
                   "forceUpdateTag": "[parameters('powershelldsc_UpdateTagVersion')]",
                   "settings": {
