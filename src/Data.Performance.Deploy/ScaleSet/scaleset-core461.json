@@ -22,10 +22,10 @@
         "value": 1
       },
       "adminUsername": {
-        "value": "vmssadmin"
+        "value": "SOMEUSER"
       },
       "adminPassword": {
-        "value": "PvYw3waXSEaLJ54p"
+        "value": "SOMEPASSWORD"
       },
       "powershelldsc_Zip": {
         "value": "/DSC/Vital.IIS.zip"

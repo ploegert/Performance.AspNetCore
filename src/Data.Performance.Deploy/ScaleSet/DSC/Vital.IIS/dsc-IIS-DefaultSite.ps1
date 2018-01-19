@@ -73,17 +73,6 @@ Configuration ConfigureIIS
             Ensure = "Present"
         }
 
-        #Pre-Reqs
-        Script InstallNetCoreSDK {
-            GetScript  = { @{ Result = "" } }
-            TestScript = { $false }
-            SetScript  = {
-                Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreSDK]", "Executing CoreDskInstall","is starting execution: Src:==>$($Using:CoreSdkInstall_Url).")
-                &([scriptblock]::Create((Invoke-WebRequest -useb $Using:CoreSdkInstall_Url))) #<additional install-script args>
-                Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreSDK]", "Executing msiexec","is done.")
-            }
-        }
-
         Script InstallNetCoreHosting {
             GetScript  = { @{ Result = "" } }
             TestScript = { $false }
@@ -110,6 +99,17 @@ Configuration ConfigureIIS
             }
         }
         
+        
+        #Pre-Reqs
+        # Script InstallNetCoreSDK {
+        #     GetScript  = { @{ Result = "" } }
+        #     TestScript = { $false }
+        #     SetScript  = {
+        #         Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreSDK]", "Executing CoreDskInstall","is starting execution: Src:==>$($Using:CoreSdkInstall_Url).")
+        #         &([scriptblock]::Create((Invoke-WebRequest -useb $Using:CoreSdkInstall_Url))) #<additional install-script args>
+        #         Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreSDK]", "Executing msiexec","is done.")
+        #     }
+        # }
 
         Script DownloadWebPackage {
             GetScript  = { @{ Result = "" } }
@@ -153,16 +153,16 @@ Configuration ConfigureIIS
             GetScript  = { return @{} }
         }
 
-        # script destinationfoldercleanup {
-        #     testscript = { return -not (test-path $using:WebVirtDirectory) }
-        #     setscript  = {
-        #         #file resource does not delete files. grrrrrrr
-        #         $sourcefiles = get-childitem $using:packageStaging -recurse;
-        #         $destinationfiles = get-childitem $using:WebVirtDirectory -recurse;
-        #         compare-object $sourcefiles $destinationfiles | where sideindicator -eq '=>' | select -expandproperty inputobject | select -expandproperty fullname | sort -descending | remove-item -recurse -force;
-        #     }
-        #     getscript  =	{ return @{} }
-        # }
+        script destinationfoldercleanup {
+            testscript = { return -not (test-path $using:WebVirtDirectory) }
+            setscript  = {
+                #file resource does not delete files. grrrrrrr
+                $sourcefiles = get-childitem $using:packageStaging -recurse;
+                $destinationfiles = get-childitem $using:WebVirtDirectory -recurse;
+                compare-object $sourcefiles $destinationfiles | where sideindicator -eq '=>' | select -expandproperty inputobject | select -expandproperty fullname | sort -descending | remove-item -recurse -force;
+            }
+            getscript  =	{ return @{} }
+        }
 
         #File DownloadPackage {
         #  Ensure = "Present"
