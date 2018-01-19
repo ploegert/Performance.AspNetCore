@@ -96,7 +96,8 @@ Configuration ConfigureIIS
                 Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Downlaoding CoreHostInstall","is done.") 
 
                 Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Executing msiexec","is starting execution: PkgName==>$($Using:CoreHostInstall_Path)")
-                msiexec /package $($Using:CoreHostInstall_Path) /quiet
+                #msiexec /package $($Using:CoreHostInstall_Path) /quiet | Out-String | Write-Verbose -Verbose
+                & $($Using:CoreHostInstall_Path) /s /norestart | Out-String | Write-Verbose -Verbose
                 Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Executing msiexec","is done.")
 
                 Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Stopping IIS","...")
