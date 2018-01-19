@@ -92,7 +92,7 @@ Configuration ConfigureIIS
                 
                 Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Downlaoding CoreHostInstall","is starting execution: Src:==>$($Using:CoreHostInstall_Url), Dst:==>$($Using:CoreHostInstall_Path)")
                 $WebClient = New-Object -TypeName System.Net.WebClient;
-                $WebClient.DownloadFile($($Using:CoreHostInstall_Url, $($Using:CoreHostInstall_Path)));
+                $WebClient.DownloadFile($($Using:CoreHostInstall_Url), $($Using:CoreHostInstall_Path));
                 Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Downlaoding CoreHostInstall","is done.") 
 
                 Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Executing msiexec","is starting execution: PkgName==>$($Using:CoreHostInstall_Path)")
