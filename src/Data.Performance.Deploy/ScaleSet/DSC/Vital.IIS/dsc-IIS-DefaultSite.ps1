@@ -19,8 +19,10 @@ Configuration ConfigureIIS
         $packageStaging = "C:\WindowsAzure\Applications\WebApplication\"
         
         $CoreSdkInstall_Url = 'https://dot.net/v1/dotnet-install.ps1'
-        $CoreHostInstall_Url = "https://aka.ms/dotnetcore-2-windowshosting"
-        $CoreHostInstall_Path = "C:\WindowsAzure\Applications\DotNetCore-WindowsHosting.exe"
+        # $CoreHostInstall_2_Url = "https://aka.ms/dotnetcore-2-windowshosting"
+        # $CoreHostInstall_1_Url = "https://aka.ms/dotnetcore-1-windowshosting"
+        # $CoreHostInstall_1_Path = "C:\WindowsAzure\Applications\DotNetCore-WindowsHosting.exe"
+        # $CoreHostInstall_2_Path = "C:\WindowsAzure\Applications\DotNetCore-WindowsHosting.exe"
 
 
 
@@ -77,18 +79,40 @@ Configuration ConfigureIIS
             GetScript  = { @{ Result = "" } }
             TestScript = { $false }
             SetScript  = {
-                #&([scriptblock]::Create((Invoke-WebRequest -useb 'https://dot.net/v1/dotnet-install.ps1'))) #<additional install-script args>
-                
-                Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Downlaoding CoreHostInstall","is starting execution: Src:==>$($Using:CoreHostInstall_Url), Dst:==>$($Using:CoreHostInstall_Path)")
-                $WebClient = New-Object -TypeName System.Net.WebClient;
-                $WebClient.DownloadFile($($Using:CoreHostInstall_Url), $($Using:CoreHostInstall_Path));
-                Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Downlaoding CoreHostInstall","is done.") 
+                                
 
-                Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Executing msiexec","is starting execution: PkgName==>$($Using:CoreHostInstall_Path)")
+                $CoreSdkInstall_Url = 'https://dot.net/v1/dotnet-install.ps1'
+                $CoreHostInstall_2_Url = "https://aka.ms/dotnetcore-2-windowshosting"
+                $CoreHostInstall_1_Url = "https://aka.ms/dotnetcore-1-windowshosting"
+                # $CoreHostInstall_1_Path = "C:\WindowsAzure\Applications\DotNetCore-WindowsHosting.exe"
+                # $CoreHostInstall_2_Path = "C:\WindowsAzure\Applications\DotNetCore-WindowsHosting.exe"
+
+
+                #Install 2.0 Runtime Hosting File
+                #===============================================================
+                #Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Downlaoding CoreHostInstall","is starting execution: Src:==>$($Using:CoreHostInstall_Url), Dst:==>$($Using:CoreHostInstall_Path)")
+                #$WebClient = New-Object -TypeName System.Net.WebClient;
+                #$WebClient.DownloadFile($($Using:CoreHostInstall_Url), $($Using:CoreHostInstall_Path));
+                #Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Downloading CoreHostInstall","is done.") 
+
+                Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Executing 2.0 Hosting Runtime","is starting execution: PkgName==>$($CoreHostInstall_2_Url)")
                 #msiexec /package $($Using:CoreHostInstall_Path) /quiet | Out-String | Write-Verbose -Verbose
-                & $($Using:CoreHostInstall_Path) /s /norestart | Out-String | Write-Verbose -Verbose
-                Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Executing msiexec","is done.")
+                #& $($Using:CoreHostInstall_Path) /s /norestart | Out-String | Write-Verbose -Verbose
+                &([scriptblock]::Create((Invoke-WebRequest -useb $($CoreHostInstall_2_Url)))) /s /norestart | Out-String | Write-Verbose -Verbose
 
+                Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Executing 2.0 Hosting Runtime","is done.")
+
+                #Install 1.1 Runtime Hosting File
+                #===============================================================
+                Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Executing 1.1 Hosting Runtime","is starting execution: PkgName==>$($CoreHostInstall_1_Url)")
+                #msiexec /package $($Using:CoreHostInstall_Path) /quiet | Out-String | Write-Verbose -Verbose
+                #& $($Using:CoreHostInstall_Path) /s /norestart | Out-String | Write-Verbose -Verbose
+                &([scriptblock]::Create((Invoke-WebRequest -useb $($CoreHostInstall_1_Url)))) /s /norestart | Out-String | Write-Verbose -Verbose
+
+                Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Executing 1.1 Hosting Runtime","is done.")
+
+                # Restart IIS
+                #===============================================================
                 Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Stopping IIS","...")
                 net stop was /y;
                 Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreHosting]", "Stopping IIS","is done.")
