@@ -8,6 +8,25 @@ When deploying various Asp.Net Core apps (using various frameworks including .ne
 
 To find what one might expect as a baseline from an Azure App Service deployment vs a VM deployment, we decided we needed to do an analyatlyic assessment of the different permutations across different dotnet frameworks against how Azure App Service performs vs persistent VMs hosted in azure.
 
+The following urls were 100% setup & deployed from the code locacted from within the project. The goal was to provide a way that someone else could independently verify our findings and provide feedback on what we did incorrectly or what we could approve upon. The following urls may or may not be available basedup on what tests are currently be executed or removed to save costs. 
+
+To run this on your own, please refereto sections below, and feel free to customize the ARM templates to use different names/urls.
+
+| Project Type | Framework     | Hosting Type  | URL          |
+| ------------ |:-------------:|:-------------:|:-------------|
+| Asp.Net Core | netcore2.0   | App Service | https://datad-ptest-dn20-ws.azurewebsites.net/static  |
+| Asp.Net Core | netcore2.0   | VM ScaleSet | http://datad-vmss-core2.eastus2.cloudapp.azure.com/static  |
+| Asp.Net Core | netcore2.0   | VM          | http://datad-ptestvm.eastus2.cloudapp.azure.com/static |
+| Asp.Net Core | netcore1.1   | App Service | https://datad-ptest-dn11-ws.azurewebsites.net/static  |
+| Asp.Net Core | netcore1.1   | VM ScaleSet | http://datad-vmss-core11.eastus2.cloudapp.azure.com/static |
+| Asp.Net Core | netcore1.1   | VM          | |
+| Asp.Net Core | net461       | App Service | https://datad-ptest-netfx-ws.azurewebsites.net/status |
+| Asp.Net Core | net461       | VM ScaleSet | https://datad-ptest-netfx-ws.azurewebsites.net/static |
+| Asp.Net Core | net461       | VM          | |
+| Asp.Net      | Asp.Net 461  | App Service | |
+| Asp.Net      | Asp.Net 461  | VM ScaleSet | http://datad-ptest-full461-ws.azurewebsites.net/static |
+| Asp.Net      | Asp.Net 461  | VM          | |
+
 ---
 
 ## Summary & Questions/Asks to Microsoft
@@ -24,9 +43,6 @@ My results show that App Service performs much better if you are running a nativ
 6. If the intention is to host the equivlent simpl  asp.net core app that i used to test, how can I reach a scale objective of 20,000 RPS? What would the tech stack and reference architecture look like?
 
 ## Performance Results & Observations
-
-* So in thinking that we'd get somewhere near 52000 rps, we fell to a < 1000 rps for a single server. 
-* Based on other tests where we got an equivelent App Serivce, we were seeing that the vm hosted instances were getting 10,000 rps
 
 ### **Theory0:** ==> Azure App Service should perform approx equivlent to running in a VM when running on equivelent vm size
 
@@ -216,30 +232,14 @@ My results show that App Service performs much better if you are running a nativ
 ---
 ---
 
-## How did we generate the results?
+## Execution Overview
 
-### Testing Web App
-* The goal was to use the most basic of project with the bare minimum dependencies
-* use as much as the Default out of the box configuration - similar to executing ```dotnet new web```
-* Have two test cases:
-  1. "**static**" web page - A web controller that given a "GET" request, would return back a string of characters - similar to the default "ValuesController" that generates an api/values endpoint that returns a string. As this is just a string of characters, we would expect that this would be best performant Controller call that would exist.
-  2. "**status**" web page - A web controller that given a "GET" request, would grab the version of the binary dll, and return that back as a string. This would be expected to perform nearly the equivelent of the "Static" call, but perform slightly worse as it would need to do a file read to get the dll version.
-
-### Asp.Net Benchmarch Numbers
-Based upon this, we were hoping that we'd see performance numbers similar to Asp.Net benchmarks (https://github.com/aspnet/benchmarks), which if you look at the numbers, it calls out a Asp.net 4.6 IIS hosted Asp.net app can recieve 51k Requests per second. It's worth noting that these tests execute on two physical machines that are connected via a physical switch - meaning it would not be reasonable to expect these performance numbers in Azure - But still...it's a heck of a place to start.
-
-It's also worth noting that they are using a tool called wrk (https://github.com/wg/wrk) to generate the load for these tests.
-
-Detailed Results are called out here: https://aka.ms/aspnet/benchmarks.
-
----
----
-
-### Hosting Posibilities
+### Basis: Hosting Posibilities
 
 When we talk about hosting our services in azure, we are tethered to using a Windows Based Operating system due to our dependency on the Full asp.net Framework or the .net core 4.6.1 runtime. Given this requirement, we belive the following options are available to host our apps:
 
-Hosting Options:
+Hosting Options (that I know of):
+
 1. Azure App Service using App Service Plan to host the app(s) with a Network Load Balancer
 2. Azure VMs behind a Network Load Balancer
 3. Azure VMScale Sets behind a Network Load Balancer
@@ -248,16 +248,36 @@ Hosting Options:
     - using AKS (Azure Kubernetes Service)
     - using App Service to host the docker container
     - using Service fabric to host the docker container
-6. Host Apps in App Service Environment (ASE) - Similar to #1, only dedicated
+6. Host Apps in App Service Environment (ASE) - Similar to #1, only dedicated & can achine a high number scale set in the Hosting Plan.
 
-For Simplicity sake, we can effectively rule out options 4 & 5 out of this performance evalation as we simply do not have the time or resources to cover all 5 options at this time. 
+For Simplicity sake, we can effectively rule out options 4, 5, & 6 out of scope of this performance evalation as we simply do not have the time or resources to cover all options at this time.
 
+### Asp.Net Benchmarch Numbers
 
-### #Naive Performance Expermentation - Azure App Service Edition
-Before finding the optimal deployment mechanism (VM scale set vs App Service), the basis of our test was to first find the upper limit of what azure app service could handle.
+We began this benchmarking task hoping that we'd see performance numbers similar to [Asp.Net benchmarks](https://github.com/aspnet/benchmarks), which if you look at the numbers, it calls out a Asp.net 4.6 IIS hosted Asp.net app can recieve 51k Requests per second. It's worth noting that these tests execute on two physical machines that are connected via a physical switch - meaning it would not be reasonable to expect these performance numbers in Azure - But still...it's a heck of a place to start.
 
-#### Azure App Service Configuration
-To make this a reproducable test, We used the following configuration/requirements
+It's also worth noting that they are using a tool called wrk (https://github.com/wg/wrk) to generate the load for these tests.
+
+Detailed Results are called out here: https://aka.ms/aspnet/benchmarks.
+
+### Expectations vs Reality
+
+* We had hoped that we'd get somewhere near 52,000 Request/Second per the [Asp.Net benchmarks](https://github.com/aspnet/benchmarks)
+* Based on a co-worker's earlier expirement to host a Java App in a VM, we were seeing that the vm hosted instances were getting 10,000 rps.
+* So we revised our expectation down to < 10,000 Req/Sec, hopeing that We'd see something similar in Azure App Service.
+* A simple cursery test showed we scored a decidely sad < 1000 rps for a single server in Azure App Service.
+* This is the point we decided to dig in a bit deeper to figure out where the bottleneck is and what would be performant.
+
+### Testing Web App Base Requirements
+
+Before finding the optimal deployment mechanism (VM scale set vs App Service), the basis of our test was to first find the upper limit of what azure app service could handle. To make this a reproducable test, We used the following configuration/requirements:
+
+* The goal was to use the most basic of project with the bare minimum dependencies
+* use as much as the Default out of the box configuration - similar to executing ```dotnet new web```
+* Have two test cases:
+  1. "**static**" web page - A web controller that given a "GET" request, would return back a string of characters - similar to the default "ValuesController" that generates an api/values endpoint that returns a string. As this is just a string of characters, we would expect that this would be best performant Controller call that would exist.
+  2. "**status**" web page - A web controller that given a "GET" request, would grab the version of the binary dll, and return that back as a string. This would be expected to perform nearly the equivelent of the "Static" call, but perform slightly worse as it would need to do a file read to get the dll version.
+* Toward the last 3/4 of testing, it showed that the Static vs Status results were always roughly the same. So to simplify results & readout, we reduced the remaining tests to just examine the static endpoint for the remaining tests.
 * The azure deployment should consist of an ARM template that deploys:
     - Web Hosting Plan
     - Web Application
@@ -267,6 +287,9 @@ To make this a reproducable test, We used the following configuration/requiremen
 * minimize any custom Web server optimizations - basically see what we can get "out of the box" when deploying the app service
 
 ---
+---
+
+## Execution Details
 
 ### The Source code: Asp.net Solution setup
 So we spun up a solution called "Data.Performance" that had several solutions:
@@ -627,16 +650,6 @@ There is a bit of wonkiness in the script. Problems that I've seen:
 * We have used Microsoft Load tests in the past, but recently our dev team moved over to using Blazemeter (https://www.blazemeter.com/).
 * I setup a Project called "Justin-Tests", and under that I created a bunch of tests:
 
-    | Project Type | Framework     | Test Type |
-    | ------------ |:-------------:|:-------------:|
-    | Asp.Net Core | netcore2.0 | Static Web Page |
-    | Asp.Net Core | netcore2.0 | Status Web Page |
-    | Asp.Net Core | netcore1.1 | Static Web Page |
-    | Asp.Net Core | netcore1.1 | Status Web Page |
-    | Asp.Net Core | net461 | Static Web Page |
-    | Asp.Net Core | net461 | Status Web Page |
-    | Asp.Net      | net461 | Static Web Page |
-
 ![BlazeMeter Project](docs/blazemeter-projects.png)
 
 * In each test, i used a baseline of 1500 virtual Users, which resulted in Blazemeter spinning up:
@@ -649,6 +662,9 @@ There is a bit of wonkiness in the script. Problems that I've seen:
     * run for a duration of 2 minutes
     * Delay between iterations of 0 seconds (no delay )
     * Urls that were getting executed by jmeter looked like:
-        * https://datad-ptest-netfx-ws.azurewebsites.net/static
-        * https://datad-ptest-netfx-ws.azurewebsites.net/status
+      * https://datad-ptest-netfx-ws.azurewebsites.net/status
+      * http://datad-ptestvm.eastus2.cloudapp.azure.com/static
+      * http://datad-ptest-full461-ws.azurewebsites.net/static
+      * http://datad-vmss-core2.eastus2.cloudapp.azure.com/static
+      * http://datad-vmss-core11.eastus2.cloudapp.azure.com/static
 
