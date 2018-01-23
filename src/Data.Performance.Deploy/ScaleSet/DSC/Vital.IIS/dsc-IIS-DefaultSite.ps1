@@ -131,6 +131,8 @@ Configuration ConfigureIIS
         #     SetScript  = {
         #         Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreSDK]", "Executing CoreDskInstall","is starting execution: Src:==>$($Using:CoreSdkInstall_Url).")
         #         &([scriptblock]::Create((Invoke-WebRequest -useb $Using:CoreSdkInstall_Url))) #<additional install-script args>
+
+        #         &([scriptblock]::Create((Invoke-WebRequest -useb "https://dot.net/v1/dotnet-install.ps1"))) 
         #         Write-Verbose -Message ('{0} {1} {2}' -f "[InstallNetCoreSDK]", "Executing msiexec","is done.")
         #     }
         # }

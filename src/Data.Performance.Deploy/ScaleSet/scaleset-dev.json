@@ -30,6 +30,9 @@
     "powershelldsc_Zip": {
       "value": "/DSC/Vital.IIS.zip"
     },
+    "powershelldsc_Zip": {
+      "value": "/DSC/Vital.IIS.zip"
+    },
     "powershelldsc_script": {
       "value":"dsc-IIS-DefaultSite.ps1" 
     },
@@ -43,7 +46,10 @@
       "value": "/WebDeploy/Data.Performance.AspNetCore2.WebAPI.zip"
     },
     "powershelldsc_UpdateTagVersion": {
-      "value": "1.21"
+      "value": "1.24"
+    },
+    "powershelldsc_Bootstrap_FullPath": {
+      "value":"https://raw.githubusercontent.com/ploegert/Performance.AspNetCore/master/src/Data.Performance.Deploy/ScaleSet/DSC/dsc-bootstrap.ps1"
     }
   }
 }
