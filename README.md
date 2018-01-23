@@ -1,4 +1,4 @@
-# A naive Performance Evaluation of Azure App Service vs VMs
+# A Naive Performance Evaluation of Azure App Service vs VMs
 
 ## Overview
 The purpose of this exercise is to provide a baseline performance indicator when comparing different services hosted in Azure. 
