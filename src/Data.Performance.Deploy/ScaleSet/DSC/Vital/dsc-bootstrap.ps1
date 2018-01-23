@@ -165,5 +165,5 @@ Configuration SetupBox
 	}
 }
 
-SetupBox -OutputPath "${env:ProgramFiles(x86)}\WindowsPowerShell\Configuration";
-Start-DscConfiguration -Path "${env:ProgramFiles(x86)}\WindowsPowerShell\Configuration" -Wait -Verbose -Force;
+#SetupBox -OutputPath "${env:ProgramFiles(x86)}\WindowsPowerShell\Configuration";
+#Start-DscConfiguration -Path "${env:ProgramFiles(x86)}\WindowsPowerShell\Configuration" -Wait -Verbose -Force;

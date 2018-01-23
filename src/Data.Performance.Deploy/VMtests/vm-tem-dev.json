@@ -1,0 +1,22 @@
+//ME Template Parameter File
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "envName": { "value": "d" },
+      "appName": { "value": "data" },
+      "roleName": { "value": "ptestvm" },
+      "region": { "value": "East US 2" },
+      "vm_admin_username": { "value": "jciazdeploy" },
+      "vm_admin_password": { "value": "rDeWZjeCbB9xkPQa" },
+      "vm_Size": { "value": "Standard_DS4_v2" },
+      "vm_ImagePublisher": { "value": "MicrosoftWindowsServer" },
+      "vm_ImageOffer": { "value": "WindowsServer" },
+      "vm_ImageSKU": { "value": "2016-Datacenter" },
+      "vnet_name": { "value": "datau-hplat-vnet" },
+      "vnet_rg_name": { "value": "datau-hplat-rg" },
+      "vnet_add1_cidr": { "value": "172.16.177.0/24" },
+      "vnet_add1_sub1_name": { "value": "Web" },
+      "vnet_add1_sub1_cidr": { "value": "172.16.177.0/25" }
+    }
+  }

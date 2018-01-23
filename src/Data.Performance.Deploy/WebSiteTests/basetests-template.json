@@ -111,6 +111,12 @@
       //"ws_4_hp_Id": "[resourceId('Microsoft.Web/serverfarms', variables('ws_4_hp_Name'))]",
       "ws_4_Name": "[concat(variables('appEnv-Svc'),variables('ws_4_prefix'), '-ws')]",
 
+      "ws_5_prefix": "-full461",
+      "ws_5_hp_Name": "[concat(variables('appEnv-Svc'),variables('ws_5_prefix'), '-hp')]",
+      //"ws_4_hp_Id": "[resourceId('Microsoft.Web/serverfarms', variables('ws_4_hp_Name'))]",
+      "ws_5_Name": "[concat(variables('appEnv-Svc'),variables('ws_5_prefix'), '-ws')]",
+
+
       "storageaccountName": "[concat(parameters('deploymentNames').app, parameters('deploymentNames').env,parameters('deploymentNames').svc,'sa')]",
   
       "cdb_databaseAccountName": "[concat(variables('appEnv-Svc'),'-', 'cdb')]",
@@ -162,32 +168,32 @@
             "dependsOn": []
         },
         // hosting Plan 2
-        {
-            "type": "Microsoft.Web/serverfarms",
-            "sku": {
-                "name": "[parameters('web_HostingPlan_SKU_Name')]",
-                "tier": "[parameters('web_HostingPlan_SKU_Tier')]",
-                "size": "[parameters('web_HostingPlan_SKU_Name')]",
-                "family": "[parameters('web_HostingPlan_SKU_Family')]",
-                "capacity": "[parameters('web_HostingPlan_SKU_Capacity')]"
-            },
-            "kind": "app",
-            "name": "[variables('ws_2_hp_Name')]",
-            "apiVersion": "2016-09-01",
-            "location": "[resourceGroup().location]",
-            "scale": null,
-            "properties": {
-                "name": "[variables('ws_2_hp_Name')]",
-                "workerTierName": null,
-                "adminSiteName": null,
-                "hostingEnvironmentProfile": null,
-                "perSiteScaling": false,
-                "reserved": false,
-                "targetWorkerCount": 0,
-                "targetWorkerSizeId": 0
-            },
-            "dependsOn": []
-        },
+        // {
+        //     "type": "Microsoft.Web/serverfarms",
+        //     "sku": {
+        //         "name": "[parameters('web_HostingPlan_SKU_Name')]",
+        //         "tier": "[parameters('web_HostingPlan_SKU_Tier')]",
+        //         "size": "[parameters('web_HostingPlan_SKU_Name')]",
+        //         "family": "[parameters('web_HostingPlan_SKU_Family')]",
+        //         "capacity": "[parameters('web_HostingPlan_SKU_Capacity')]"
+        //     },
+        //     "kind": "app",
+        //     "name": "[variables('ws_2_hp_Name')]",
+        //     "apiVersion": "2016-09-01",
+        //     "location": "[resourceGroup().location]",
+        //     "scale": null,
+        //     "properties": {
+        //         "name": "[variables('ws_2_hp_Name')]",
+        //         "workerTierName": null,
+        //         "adminSiteName": null,
+        //         "hostingEnvironmentProfile": null,
+        //         "perSiteScaling": false,
+        //         "reserved": false,
+        //         "targetWorkerCount": 0,
+        //         "targetWorkerSizeId": 0
+        //     },
+        //     "dependsOn": []
+        // },
         // hosting Plan 3
         {
             "type": "Microsoft.Web/serverfarms",
@@ -242,6 +248,33 @@
             },
             "dependsOn": []
         },
+        // hosting Plan 5
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "sku": {
+                "name": "[parameters('web_HostingPlan_SKU_Name')]",
+                "tier": "[parameters('web_HostingPlan_SKU_Tier')]",
+                "size": "[parameters('web_HostingPlan_SKU_Name')]",
+                "family": "[parameters('web_HostingPlan_SKU_Family')]",
+                "capacity": "[parameters('web_HostingPlan_SKU_Capacity')]"
+            },
+            "kind": "app",
+            "name": "[variables('ws_5_hp_Name')]",
+            "apiVersion": "2016-09-01",
+            "location": "[resourceGroup().location]",
+            "scale": null,
+            "properties": {
+                "name": "[variables('ws_5_hp_Name')]",
+                "workerTierName": null,
+                "adminSiteName": null,
+                "hostingEnvironmentProfile": null,
+                "perSiteScaling": false,
+                "reserved": false,
+                "targetWorkerCount": 0,
+                "targetWorkerSizeId": 0
+            },
+            "dependsOn": []
+        },
     
     
         // =====================================
@@ -265,24 +298,24 @@
             "resources": [ ]
         },
         // Web Site - 2
-        {
-            "apiVersion": "2015-08-01",
-            "type": "Microsoft.Web/sites",
-            "name": "[variables('ws_2_Name')]",
-            "location": "[resourceGroup().location]",
-            "properties": {
-                "name": "[variables('ws_2_Name')]",
-                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('ws_2_hp_Name'))]",
-                "siteConfig": {
-                    "alwaysOn": true
-                }
-                //"clientAffinityEnabled": false
-            },
-            "dependsOn": [
-                "[concat('Microsoft.Web/serverfarms/', variables('ws_2_hp_Name'))]"
-            ],
-            "resources": [ ]
-        },
+        // {
+        //     "apiVersion": "2015-08-01",
+        //     "type": "Microsoft.Web/sites",
+        //     "name": "[variables('ws_2_Name')]",
+        //     "location": "[resourceGroup().location]",
+        //     "properties": {
+        //         "name": "[variables('ws_2_Name')]",
+        //         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('ws_2_hp_Name'))]",
+        //         "siteConfig": {
+        //             "alwaysOn": true
+        //         }
+        //         //"clientAffinityEnabled": false
+        //     },
+        //     "dependsOn": [
+        //         "[concat('Microsoft.Web/serverfarms/', variables('ws_2_hp_Name'))]"
+        //     ],
+        //     "resources": [ ]
+        // },
         // Web Site - 3
         {
             "apiVersion": "2015-08-01",
@@ -318,6 +351,25 @@
             },
             "dependsOn": [
                 "[concat('Microsoft.Web/serverfarms/', variables('ws_4_hp_Name'))]"
+            ],
+            "resources": [ ]
+        },
+        // Web Site - 5
+        {
+            "apiVersion": "2015-08-01",
+            "type": "Microsoft.Web/sites",
+            "name": "[variables('ws_5_Name')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "name": "[variables('ws_5_Name')]",
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('ws_5_hp_Name'))]",
+                "siteConfig": {
+                    "alwaysOn": true
+                }
+                //"clientAffinityEnabled": false
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Web/serverfarms/', variables('ws_5_hp_Name'))]"
             ],
             "resources": [ ]
         }

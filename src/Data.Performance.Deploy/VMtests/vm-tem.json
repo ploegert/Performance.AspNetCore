@@ -1,0 +1,455 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "envName": {
+      "type": "string",
+      "metadata": { "description": "Prefix to use for VM names" }
+    },
+    "appName": {
+      "type": "string",
+      "metadata": { "description": "Prefix to use for VM names" }
+    },
+    "roleName": {
+      "type": "string",
+      "defaultValue": "box",
+      "metadata": { "description": "Prefix to use for VM names" }
+    },
+    "region": {
+      "type": "string",
+      "metadata": { "description": "Location where resources will be provisioned" },
+      "defaultValue": "East Asia",
+      "allowedValues": [ "East US", "East US 2", "East Asia" ]
+    },
+    "vm_admin_username": {
+      "type": "string",
+      "defaultValue": "jciazdeploy",
+      "metadata": { "description": "Admin username" }
+    },
+    "vm_admin_password": {
+      "type": "securestring",
+      "metadata": { "description": "Admin password" }
+    },
+    "vm_Size": {
+      "type": "string",
+      "defaultValue": "Standard_A2",
+      "allowedValues": [
+        "Standard_A0",
+        "Standard_A1",
+        "Standard_A2",
+        "Standard_A3",
+        "Standard_A4",
+        "Standard_A5",
+        "Standard_A6",
+        "Standard_A7",
+        "Standard_D1",
+        "Standard_D2",
+        "Standard_D3",
+        "Standard_D4",
+        "Standard_D11",
+        "Standard_D12",
+        "Standard_D13",
+        "Standard_D14",
+        "Standard_DS1",
+        "Standard_DS2",
+        "Standard_DS3",
+        "Standard_DS4",
+        "Standard_DS11",
+        "Standard_DS12",
+        "Standard_DS13",
+        "Standard_DS14",
+        "Standard_G1",
+        "Standard_G2",
+        "Standard_G3",
+        "Standard_G4",
+        "Standard_G5",
+        "Standard_GS1",
+        "Standard_GS2",
+        "Standard_GS3",
+        "Standard_GS4",
+        "Standard_GS5",
+        "Standard_DS4_v2",
+        "Standard_DS3_v2"
+      ],
+      "metadata": { "description": "This is the allowed list of VM sizes" }
+    },
+    "vm_NumOfInstances": {
+      "type": "int",
+      "defaultValue": 1,
+      "metadata": { "description": "number of vms to provision" }
+    },
+    "vm_ImagePublisher": {
+      "type": "string",
+      "defaultValue": "MicrosoftVisualStudio",
+      "allowedValues": [ "Canonical", "MicrosoftVisualStudio", "MicrosoftWindowsServer", "MicrosoftSQLServer" ],
+      "metadata": { "description": "OS Version Parameters" }
+    },
+    "vm_ImageOffer": {
+      "type": "string",
+      "defaultValue": "Windows",
+      "allowedValues": [ "UbuntuServer", "Windows", "WindowsServer", "SQL2014-WS2012R2", "SQL2014SP1-WS2012R2", "SQL2014SP2-WS2012R2" ],
+      "metadata": { "description": "OS Version Parameters" }
+    },
+    "vm_ImageSKU": {
+      "type": "string",
+      "defaultValue": "Windows-10-N-x64",
+      "allowedValues": [ "14.04.2-LTS", "Windows-10-N-x64", "2012-R2-Datacenter", "Enterprise", "2008-R2-SP1", "2016-Datacenter" ],
+      "metadata": { "description": "OS Version Parameters" }
+    },
+
+    "vnet_name": {
+      "type": "string",
+      "metadata": { "description": "This is the name of the Virtual Network" }
+    },
+    "vnet_add1_cidr": {
+      "type": "string",
+      "defaultValue": "172.16.0.1/16",
+      "metadata": { "description": "This is the full CIDR Scope of VNET1" }
+    },
+    "vnet_add1_sub1_name": {
+      "type": "string",
+      "defaultValue": "Web",
+      "metadata": { "description": "Subnet 1 Name" }
+    },
+    "vnet_add1_sub1_cidr": {
+      "type": "string",
+      "defaultValue": "172.16.0.0/22",
+      "metadata": { "description": "Subnet 1 subnet" }
+    },
+    "vnet_rg_name": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().name]",
+      "metadata": { "description": "The resource Group the VNet1 is located in" }
+    }
+  },
+  "variables": {
+
+    "rg_id": "[resourceGroup().id]",
+
+    //VM Parameters
+    "vm_name_prefix": "[concat(parameters('appName'),parameters('envName'),'-',parameters('roleName'))]",
+    "vm_availset_name": "[concat(variables('vm_name_prefix'),'-availset')]",
+    "vm_NumOfInstances": "[parameters('vm_NumOfInstances')]",
+
+    //Image Vars
+    "vm_ImagePublisher": "[parameters('vm_ImagePublisher')]",
+    "vm_ImageOffer": "[parameters('vm_ImageOffer')]",
+    "vm_ImageSKU": "[parameters('vm_ImageSKU')]",
+
+    //PIP Vars
+    "vm_pip_name": "[concat(variables('vm_name_prefix'),'-pip')]",
+    "vm_pip_type": "Dynamic",
+    "vm_pip_id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('vm_pip_name'))]",
+    "vm_pip_dns_name": "[concat(variables('vm_name_prefix'))]",
+
+    //Network Card
+    "vm_nic_name": "[concat(variables('vm_name_prefix'),'-nic')]",
+    "vm_nic_id": "[resourceId('Microsoft.Network/loadBalancers',variables('vm_nic_name'))]",
+
+    //NSG Config
+    "nsg_name": "[concat(variables('vm_name_prefix'),'-nsg')]",
+
+    //Vnet Vars
+    "vnet_name": "[parameters('vnet_name')]",
+    "vnet_rg_name": "[parameters('vnet_rg_name')]",
+    "vnet_add1_cidr": "[parameters('vnet_add1_cidr')]",
+    "vnet_add1_sub1_name": "[parameters('vnet_add1_sub1_name')]",
+    "vnet_add1_sub1_cidr": "[parameters('vnet_add1_sub1_cidr')]",
+    "vnet1_id": "[resourceId(variables('vnet_rg_name'), 'Microsoft.Network/virtualNetworks', variables('vnet_name'))]",
+    "vnet_add1_cidr_sub1_ref": "[concat(variables('vnet1_id'),'/subnets/',variables ('vnet_add1_sub1_name'))]",
+
+    //NLB Vars
+    "vm_nlb_name": "[concat(variables('vm_name_prefix'),'-nlb')]",
+    "vm_nlb_id": "[resourceId('Microsoft.Network/loadBalancers',variables('vm_nlb_name'))]",
+    "vm_nlb_be_name": "[concat(variables('vm_name_prefix'),'-BackEndPool')]",
+    "vm_nlb_be_id": "[concat(variables('vm_nlb_id'),'/backendAddressPools/',variables('vm_nlb_be_name'))]",
+    "vm_nlb_probe_id": "[concat(variables('vm_nlb_id'),'/probes/', variables('vm_nlb_probe_name'))]",
+    "vm_nlb_probe_name": "httpprobe",
+    "vm_nlb_fe_id": "[concat(variables('vm_nlb_id'),'/frontendIPConfigurations/',variables('vm_nlb_fe_name'))]",
+    "vm_nlb_fe_name": "[concat(variables('vm_name_prefix'),'-FrontEndName')]",
+
+    "vm_mngstorage_disk1_name": "[concat(variables('vm_name_prefix'),'-datadisk1')]",
+    //"vm_mngstorage_sku": "Standard_LRS",
+    "vm_mngstorage_sku": "Premium_LRS",
+    "vm_mngstorage_disk1_id": "[resourceId('Microsoft.Compute/disks/', variables('vm_mngstorage_disk1_name'))]",
+
+    "api-version": "2015-06-15"
+  },
+  "resources": [
+    //=============================================================================================
+    // Managed Disk
+    {
+      "type": "Microsoft.Compute/disks",
+      "name": "[variables('vm_mngstorage_disk1_name')]",
+      "apiVersion": "2017-03-30",
+      "location": "[resourceGroup().location]",
+      "sku": { "name": "Premium_LRS" },
+      "properties": {
+          "creationData": {
+              "createOption": "Empty"
+          },
+          "diskSizeGB": 1023
+      }
+  },
+    
+    //=============================================================================================
+    // Virtual Machines
+    {
+      "apiVersion": "2017-03-30",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(variables('vm_name_prefix'), copyindex())]",
+      "copy": {
+        "name": "virtualMachineLoop",
+        "count": "[variables('vm_NumOfInstances')]"
+      },
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "VirtualMachines",
+        "App": "[parameters('appName')]",
+        "Env": "[parameters('envName')]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', variables('vm_nic_name'), copyindex())]",
+        "[concat('Microsoft.Compute/availabilitySets/', variables('vm_availset_name'))]",
+        "[variables('vm_mngstorage_disk1_id')]"
+      ],
+      "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets',variables('vm_availset_name'))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "[parameters('vm_Size')]"
+        },
+        "osProfile": {
+          "computerName": "[concat(variables('vm_name_prefix'), copyIndex())]",
+          "adminUsername": "[parameters('vm_admin_username')]",
+          "adminPassword": "[parameters('vm_admin_password')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('vm_ImagePublisher')]",
+            "offer": "[variables('vm_ImageOffer')]",
+            "sku": "[variables('vm_ImageSKU')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "createOption": "FromImage"
+          },
+          "dataDisks": [
+            {
+                "lun": 0,
+                "name": "[variables('vm_mngstorage_disk1_name')]",
+                "createOption": "Attach",
+                "managedDisk": {
+                    "id": "[variables('vm_mngstorage_disk1_id')]"
+                }
+            }
+          ]
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "properties": {
+                "primary": true
+              },
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('vm_nic_name'),copyindex()))]"
+            }
+          ]
+        }
+      }
+    },
+
+    //=============================================================================================
+    // Network Load Balancer
+    { //   vm NLB
+      "apiVersion": "2015-06-15",
+      "name": "[variables('vm_nlb_name')]",
+      "type": "Microsoft.Network/loadBalancers",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "LoadBalancer",
+        "App": "[parameters('appName')]",
+        "Env": "[parameters('envName')]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('vm_pip_name'))]"
+      ],
+      "properties": {
+        "frontendIPConfigurations": [
+          {
+            "name": "[variables('vm_nlb_fe_name')]",
+            "properties": {
+              "publicIPAddress": {
+                "id": "[variables('vm_pip_id')]"
+              }
+            }
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "[variables('vm_nlb_be_name')]"
+          }
+        ],
+        "inboundNatRules": [
+          {
+            "name": "RDP-0",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[variables('vm_nlb_fe_id')]"
+              },
+              "protocol": "Tcp",
+              "frontendPort": 61110,
+              "backendPort": 3389,
+              "enableFloatingIP": false
+            }
+          }
+        ],
+        "loadBalancingRules": [
+          {
+            "name": "[concat(variables('vm_name_prefix'),'80')]",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[variables('vm_nlb_fe_id')]"
+              },
+              "backendAddressPool": {
+                "id": "[variables('vm_nlb_be_id')]"
+              },
+              "protocol": "Tcp",
+              "frontendPort": 80,
+              "backendPort": 80,
+              "enableFloatingIP": false,
+              "idleTimeoutInMinutes": 5,
+              "probe": {
+                "id": "[variables('vm_nlb_probe_id')]"
+              }
+            }
+          },
+          {
+           "name": "[concat(variables('vm_name_prefix'),'443')]",
+           "properties": {
+             "frontendIPConfiguration": {
+               "id": "[variables('vm_nlb_fe_id')]"
+             },
+             "backendAddressPool": {
+               "id": "[variables('vm_nlb_be_id')]"
+             },
+             "protocol": "Tcp",
+             "frontendPort": 443,
+             "backendPort": 443,
+             "enableFloatingIP": false,
+             "idleTimeoutInMinutes": 5,
+             "probe": {
+               "id": "[variables('vm_nlb_probe_id')]"
+             }
+           }
+          }
+        ],
+        "probes": [
+          {
+            "name": "[variables('vm_nlb_probe_name')]",
+            "properties": {
+              "protocol": "Tcp",
+              "port": 80,
+              "intervalInSeconds": 60,
+              "numberOfProbes": 2
+            }
+          }
+        ]
+      }
+    },
+
+    //=============================================================================================
+    //AVAIL SETS
+    {
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[variables('vm_availset_name')]",
+      "apiVersion": "2017-03-30",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "AvailabilitySet",
+        "App": "[parameters('appName')]",
+        "Env": "[parameters('envName')]"
+      },
+      "properties": {
+        "PlatformUpdateDomainCount": 3,
+        "PlatformFaultDomainCount": 2
+      },
+      "sku": {
+        "name": "Aligned"
+      }
+    },
+    
+    //=============================================================================================
+    // Public IPs
+    { // vm Pip
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('vm_pip_name')]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "VirtualMachines",
+        "App": "[parameters('appName')]",
+        "Env": "[parameters('envName')]"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "[variables('vm_pip_type')]",
+        "dnsSettings": {
+          "domainNameLabel": "[variables('vm_pip_dns_name')]"
+        }
+      }
+    },
+
+    //=============================================================================================
+    // NICs
+    { 
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(variables('vm_nic_name'), copyindex())]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "NetworkInterface",
+        "App": "[parameters('appName')]",
+        "Env": "[parameters('envName')]"
+      },
+      "copy": {
+        "name": "nicLoop",
+        "count": "[variables('vm_NumOfInstances')]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/loadBalancers/', variables('vm_nlb_name'))]"//,
+        //"[concat('Microsoft.Network/virtualNetworks/', variables('vnet_name'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": { 
+              "privateIPAllocationMethod": "Dynamic", 
+              //"publicIPAddress": {
+              //  "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('vm_pip_name'))]"
+              //},
+              "subnet": { "id": "[variables('vnet_add1_cidr_sub1_ref')]"},
+              "loadBalancerBackendAddressPools": [
+                {
+                  //"id": "[concat(variables('vm_nlb_id'), '/backendAddressPools/',variables('vm_nlb_be_name'))]"
+                  "id": "[concat(variables('vm_nlb_be_id'))]"
+                  
+                }
+              ],
+              "loadBalancerInboundNatRules": [ 
+                {
+                  "id": "[concat(variables('vm_nlb_id'), '/inboundNatRules/RDP-', copyindex())]"
+                }
+              ]
+            }
+          }
+        ]
+        // "networkSecurityGroup" :  {
+        //   //"id": "[resourceId('Microsoft.Network/networkSecurityGroups',variables('nsg_name'))]"
+        // }
+      }
+    }
+
+
+  ]
+} 
