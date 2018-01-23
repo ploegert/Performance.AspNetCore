@@ -38,6 +38,7 @@ Hosting Options:
     - using AKS (Azure Kubernetes Service)
     - using App Service to host the docker container
     - using Service fabric to host the docker container
+6. Host Apps in App Service Environment (ASE) - Similar to #1, only dedicated
 
 For Simplicity sake, we can effectively rule out options 4 & 5 out of this performance evalation as we simply do not have the time or resources to cover all 5 options at this time. 
 
@@ -45,7 +46,7 @@ For Simplicity sake, we can effectively rule out options 4 & 5 out of this perfo
 ## Naive Performance Expermentation - Azure App Service Edition
 Before finding the optimal deployment mechanism (VM scale set vs App Service), the basis of our test was to first find the upper limit of what azure app service could handle.
 
-### Azure APp Service Configuration
+### Azure App Service Configuration
 To make this a reproducable test, We used the following configuration/requirements
 * The azure deployment should consist of an ARM template that deploys:
     - Web Hosting Plan
@@ -477,7 +478,7 @@ There is a bit of wonkiness in the script. Problems that I've seen:
 ---
 
 ### Results - .NetCore 1.1 
-| Host    | Name         | Framework   | Test Type |  Virtual Users | Host Count | Req/Sec | % Error | Avg Response |
+| Host    | Name         | Framework   | Test Type |  Virtual Users | Host Count | Req/Sec | % Error | Avg Response | 
 | ------- | ------------ | ----------- | ----- | :-------------:  | :-----:  | :-----:  | :-----:  | :-----: |
 | Web App | Asp.Net Core | netcore1.1 | Static (read string) | 1500 | 1 vm | 889 rps | 0% | 1.68 s |
 | Web App | Asp.Net Core | netcore1.1 | Status (read file) | 1500 | 1 vm | 767 rps | 0% | 1.60 s |
@@ -487,7 +488,8 @@ There is a bit of wonkiness in the script. Problems that I've seen:
 ---
 
 ### Results - .NetCore netfx(4.6.1 )
-| Host    | Name         | Framework   | Test Type |  Virtual Users | Host Count | Req/Sec | % Error | Avg Response |
+
+| Host    | Name         | Framework   | Test Type |  Virtual Users | Host Count | Req/Sec | % Error | Avg Response | 
 | ------- | ------------ | ----------- | ----- | :-------------:  | :-----:  | :-----:  | :-----:  | :-----: |
 | Web App | Asp.Net Core | net461 | Static (read string) | 1500 | 1 vm | 722 rps | 0% | 2.09 s |
 | Web App | Asp.Net Core | net461 | Status (read file) | 1500 | 1 vm | 753 rps | 0% | 2.0 s |
@@ -496,13 +498,151 @@ There is a bit of wonkiness in the script. Problems that I've seen:
 
 ---
 
-## Next Steps:
 
-* As of 1/9/2018 @ 6pm, I've completed the Azure Web App Deployments & tests
-* I've defined the VM Scale Set ARM template & deployed an intial instance to Azure, where source code is:
-    * Data.Performance.BaseTests\src\Data.Performance.Deploy\ScaleSet
-* Left to dO:
-    * Need to update the ARM deployment to deploy 3 seperate scale sets in the same network with 3 different load balancers (for each project type)
-    * Configure ARM deployment to deploy each of the VM type
-    * Ensure the iis site is deployed properly and works
-    * Re-Run load tests against the scale sets wit the same permutations that we did on the App Service tests
+## Observations - ASP.Net Core 2.0
+
+### **Theory0:** ==> Azure App Service should perform approx equivlent to running in a VM when running on equivelent vm size
+
+* Data:
+  * Compare .NetCore 2.0/1.1 on Azure App Service vs .NetCore 2.0/1.1 on VMSS
+    * ![docs/20results.png](docs/azure-core2-theory5-1.png)
+
+  * [TODO] Compare .NetCore 2.0/1.1/.netcore461 on Azure App Service to .netcore 2.0/1.1/.netcore461 on Azure VM
+
+  * [TODO] Compare native full 4.6.1 runtime on App Service to native full 4.6.1 runtime on Azure VM
+ 
+* Result: **False**
+  * The numbers clearly are in favor of App Service perfoming clearly worse than an equivlent VM - ~3,000 vs ~800 is a significant difference!
+  * Could attribute to the fact of being in public tenant - however, I Wouldn't expect the numbers to be that different
+
+* Discussion:
+  * Intuition says that since App Service are just VMs at the end of the day, these numbers are baffling. If there was one item i'd like to get to the bottom of, it's why the performance of App Service is so much worse than vms.
+  * To be fair, it'd be interesting to see the results of a native VM vs App Service (instead of a VM Scale Set, which is what these numbers represent)
+
+
+
+### **Theory1:** ==> Azure Web Apps with 2 instances should perform better than a Web App with one instance.
+
+* Data:
+  - ![docs/20results.png](docs/azure-core2-theory1.png)
+  - ![docs/20results.png](docs/azure-core2-theory1-1.png)
+  - ![docs/20results.png](docs/azure-core2-theory1-3.png)
+
+* Result: **True**
+  - Azure Web App performs slightly better when you deploy 2 instances vs 1 instance
+  - 1 host performs at roughly .60 of the performance of 2 hosts.
+
+* Discussion:
+  * .40 performance increase seems somewhat reasonable due to the load balancing and so forth
+  * The concern I have is why i start seeing a high incident of failures with more hosts - See Theory6 below.
+
+### **Theory2:** ==> Azure Web Apps with a Premium Hosting Plan should outperform Standard Hosting Plans.
+
+* Data:
+  * .NetCore 2.0 Premium vs Standard
+    * ![docs/20results.png](docs/azure-core2-theory2.png)
+
+  * .NetCore 1.1 Premium vs Standard
+    * ![docs/20results.png](docs/azure-core2-theory1-1.png)
+
+  * .Netcore running 4.6.1 framework Premium vs Standard
+    * ![docs/20results.png](docs/azure-core2-theory1-2.png)
+
+  * The number of instances doesn't seem to have an impact - even with 2 instances, premium vs standard is roughly equivelent
+    * ![docs/20results.png](docs/azure-core2-theory1-4.png)
+
+* Result: **False**
+  * Azure Web App Premium & Standard perform at roughtly the same.
+  * sometimes Premium is worse, sometimes it's better
+  
+* Discussion:
+  * This doesn't make sense - shouldn't premium be better?
+  * Need help/guidance into why this is the case.
+
+### **Theory3:** ==> .Net core 2.0 should have better performance than .Net Core 1.1 or .Net Core 1.0 or .Net Core running 4.6.1 (Premium & Standard Hosting Plans).
+
+* Data: 
+  * .NetCore 2.0 vs .NetCore 1.1 on App Service
+    * ![docs/20results.png](docs/azure-core2-theory3-1.png)
+
+  * .NetCore 2.0 vs .Net Core running full 4.6.1 runtime on App Service
+    * ![docs/20results.png](docs/azure-core2-theory3-3.png)
+
+  * .NetCore 2.0 vs .NetCore 1.1 on VM ScaleSet
+    * ![docs/20results.png](docs/azure-core2-theory3-2.png)
+   
+  * .NetCore 2.0 vs .Net Core 1.1 on VM Scale Sets
+    * ![docs/20results.png](docs/azure-core2-theory4-4.png)
+
+* Result: **Sometimes True, Sometimes False**
+  * It looks like .net Core 2.0 runs at about the same performance of .Net Core 1.0 & .Net Core 1.1
+
+* Discussion:
+  * This seems somewhat reasonable - for the most part, this is a really simple app, so I woudl think there would be differences in how different runtime would perform differently based upon the actions they are taking.
+
+### **Theory4:** ==> .Net core 2.0 should have better performance than native full 4.6.1 runtime.
+
+* Data: 
+  * .NetCore 2.0 vs .NetCore 1.1 vs .Net Core running 4.6.1 vs native full 4.6.1 runtime on App Service
+    * ![docs/20results.png](docs/azure-core2-theory4-1.png)
+
+  * .NetCore 2.0 vs native full Runtime on VM - Note high level of failures seems odd
+    * ![docs/20results.png](docs/azure-core2-theory4-2.png)
+
+* Result: **False**
+  * .Net Core 2.0/1.1/netfx4.6.1 runs at ~ .64 that performance that Native Full asp.net 4.6.1 runs
+
+* Discussion:
+  * Does this mean that in general the App Service is generally more performant when running native asp.net framework over .net core?
+  * I understand there are limitations of the number of connections that AppService can have incoming/outgoing, and due to the way that .net core on windows runs, it's behind a proxy, so it eats up 2 connections - but then shouldn't the performance be .50, not .64?
+
+### **Theory5:** ==> Azure Scale Sets behind a load balancer should perform equivelently to Azure VMs hosted behind a Load Balancer
+
+* Data:
+  * Compare .NetCore 2.0 on Azure VM vs .NetCore 2.0 on VMSS
+    * ![docs/20results.png](docs/azure-core2-theory7-1.png)
+
+* Result:**False**
+  * VMSS Seems to perform better even tho I used premium storage
+  * Could use more tests to reinforce the data to show it's not an outlier
+  * I'd like to understand why VMSS performas better than a vm. Is the load balancer different? What tier of storage does VMSS use?
+
+### **Theory6:** ==> Azure App Service with many (~10) should clearly outperform Azure App Service with 1 instance
+
+* Data:
+  * Compare various frameworks on 1, 2, and 10 instances
+    * ![docs/20results.png](docs/azure-core2-theory6-1.png)
+
+  * 10 Intance executed on 1/9 @ 12:31 PM
+    * ![docs/20results.png](docs/azure-core2-theory6-2.png)
+
+    * ![docs/20results.png](docs/azure-core2-theory6-3.png)
+    
+    * ![docs/20results.png](docs/azure-core2-theory6-4.png)
+
+  * 10 Intance executed on 1/9 @ 11:56 AM
+    * ![docs/20results.png](docs/azure-core2-theory6-5.png)
+
+    * ![docs/20results.png](docs/azure-core2-theory6-6.png)
+
+* Result:
+  * Why are we getting so many failures? Is this a problem with App Service or with BlazeMeter? 
+
+
+Theories I didn't get to:
+- Host Apps in App Service Environment (ASE) should have better performance than in App Service due to ASE being dedicated
+- Apps hosted in App Service should perform with equivleent performance of Service Fabric.
+- Because we see high number of failures when using an App Service with 10 instances, it would be intersting to run a test where we test with 1..2..3..4..5..10 until we see failures begin to increase.
+- Execute a break tests to find out at what point a the App Service will tip over with 1 Host against .netcore1.1/2.0/core461/fullAsp.Net4.6.1
+- Execute a break tests to find out at what point a the VM will tip over with 1 Host against .netcore1.1/2.0/core461/fullAsp.Net4.6.1
+- Execute a break tests to find out at what point a the VMSS will tip over with 1 Host against .netcore1.1/2.0/core461/fullAsp.Net4.6.1
+- Execute a break tests to find out at what point a the ServiceFabric will tip over with 1 Host against .netcore1.1/2.0/core461/fullAsp.Net4.6.1
+- Execute a break tests to find out at what point a the Docker container will tip over with 1 Host against .netcore1.1/2.0/core461/fullAsp.Net4.6.1
+- Compare performance of running Asp.net Core 2/1.1/netfx with IIS+Kestrel vs Kestrel only.
+- COmpare performance of running Asp.Net Core 2/1.1 with Kestrel on Windows OS vs Linux OS
+
+### **Theory8:** ==> 
+* Data:
+
+* Result: 
+  * 
