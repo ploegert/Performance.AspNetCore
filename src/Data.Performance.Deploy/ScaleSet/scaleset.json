@@ -285,6 +285,13 @@
               "caching": "ReadWrite",
               "createOption": "FromImage"
             },
+//            "osDisk": {
+//              "caching": "ReadWrite",
+//                "createOption": "FromImage",
+//                "managedDisk": {
+//                  "storageAccountType": "Premium_LRS"
+//                }
+//            },
             "imageReference": "[variables('imageReference')]"
           },
           "osProfile": {

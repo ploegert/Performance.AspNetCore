@@ -6,7 +6,7 @@
         "value": {
             "env": "d",
             "app": "data",
-            "svc": "vmss-core2"
+            "svc": "vmss-core"
         }
       },
       "vmSku": {
@@ -19,13 +19,13 @@
         "value": "datad-vmss-core2"
       },
       "instanceCount": {
-      "value": 1
+        "value": 2
       },
       "adminUsername": {
-      "value": "GEN-USER"
+        "value": "INSERTUSERNAME"
       },
       "adminPassword": {
-      "value": "GEN-PASS"
+        "value": "INSERTPASSWORD"
       },
       "powershelldsc_Zip": {
         "value": "/DSC/Vital.IIS.zip"

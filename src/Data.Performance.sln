@@ -1,15 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2010
+VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Data.Performance.AspNetCore2.MVC", "Data.Performance.AspNetCore2.MVC\Data.Performance.AspNetCore2.MVC.csproj", "{CA571B57-76E4-4E3F-A683-566829A5F6A7}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Data.Performance.AspNetCore2.WebAPI", "Data.Performance.AspNetCore2.WebAPI\Data.Performance.AspNetCore2.WebAPI.csproj", "{66041D79-9B51-4144-9D4A-C4AA08A171DE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Data.Performance.AspNet461.WebAPI", "Data.Performance.AspNet461.WebAPI\Data.Performance.AspNet461.WebAPI.csproj", "{50390EEE-5AA2-4870-A752-C4D0104EF453}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Data.Performance.AspNet461.AzureAppApi", "Data.Performance.AspNet461.AzureAppApi\Data.Performance.AspNet461.AzureAppApi.csproj", "{A7133EFC-FE27-471B-9E8F-4301B7FECCD6}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Data.Performance.AspNetCore11.WebAPI", "Data.Performance.AspNetCore11.WebAPI\Data.Performance.AspNetCore11.WebAPI.csproj", "{C4836686-6CBE-40CD-ADAA-6B4CACD7564F}"
 EndProject
@@ -17,7 +13,7 @@ Project("{151D2E53-A2C4-4D7D-83FE-D05416EBD58E}") = "Data.Performance.Deploy", "
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BaseTests", "BaseTests", "{430F773B-F7A4-4A8D-8909-5B9BA6232B17}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Data.Performance.AspNetCore461.WebAPI", "Data.Performance.AspNetCore461.WebAPI\Data.Performance.AspNetCore461.WebAPI.csproj", "{81F5265D-9FA2-448C-9632-7D1BE95DB5A1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Data.Performance.AspNetCore461.WebAPI", "Data.Performance.AspNetCore461.WebAPI\Data.Performance.AspNetCore461.WebAPI.csproj", "{81F5265D-9FA2-448C-9632-7D1BE95DB5A1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Data.Performance.AspNetCore461.2015", "Data.Performance.AspNetCore461.2015\Data.Performance.AspNetCore461.2015.csproj", "{F57CDEF7-0818-4425-AF6C-D5E6221DCA97}"
 EndProject
@@ -27,10 +23,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{CA571B57-76E4-4E3F-A683-566829A5F6A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CA571B57-76E4-4E3F-A683-566829A5F6A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CA571B57-76E4-4E3F-A683-566829A5F6A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CA571B57-76E4-4E3F-A683-566829A5F6A7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{66041D79-9B51-4144-9D4A-C4AA08A171DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{66041D79-9B51-4144-9D4A-C4AA08A171DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{66041D79-9B51-4144-9D4A-C4AA08A171DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -39,10 +31,6 @@ Global
 		{50390EEE-5AA2-4870-A752-C4D0104EF453}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{50390EEE-5AA2-4870-A752-C4D0104EF453}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{50390EEE-5AA2-4870-A752-C4D0104EF453}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A7133EFC-FE27-471B-9E8F-4301B7FECCD6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A7133EFC-FE27-471B-9E8F-4301B7FECCD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A7133EFC-FE27-471B-9E8F-4301B7FECCD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A7133EFC-FE27-471B-9E8F-4301B7FECCD6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C4836686-6CBE-40CD-ADAA-6B4CACD7564F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C4836686-6CBE-40CD-ADAA-6B4CACD7564F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C4836686-6CBE-40CD-ADAA-6B4CACD7564F}.Release|Any CPU.ActiveCfg = Release|Any CPU

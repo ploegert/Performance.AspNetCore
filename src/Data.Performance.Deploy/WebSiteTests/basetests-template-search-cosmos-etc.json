@@ -1,0 +1,516 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "deploymentNames": {
+        "type": "object"
+      },  
+      "region": {
+        "type": "string",
+        "defaultValue": "East US 2",
+        "allowedValues": [
+          "East US",
+          "East US 2",
+          "East Asia"
+        ]
+      },
+      "web_HostingPlan_SKU_Name": {
+        "type": "string",
+        "defaultValue": "S3",
+        "allowedValues": [ "F1", "D1", "B1", "B2", "B3", "S1", "S2", "S3", "P1", "P2", "P3", "P4" ],
+        "metadata": {
+          "description": "Describes plan's pricing tier and instance size. Check details at https://azure.microsoft.com/en-us/pricing/details/app-service/"
+        }
+      },
+      "web_HostingPlan_SKU_Tier": {
+        "type": "string",
+        "defaultValue": "Standard",
+        "allowedValues": [ "Basic", "Standard", "Premium" ],
+        "metadata": {
+          "description": "Describes plan's pricing tier. Check details at https://azure.microsoft.com/en-us/pricing/details/app-service/"
+        }
+      },
+      "web_HostingPlan_SKU_Family": {
+        "type": "string",
+        "defaultValue": "S",
+        "allowedValues": [ "S", "B", "P" ],
+        "metadata": {
+          "description": "Describes plan's pricing tier. Check details at https://azure.microsoft.com/en-us/pricing/details/app-service/"
+        }
+      },
+      "web_HostingPlan_SKU_Capacity": {
+        "type": "int",
+        "defaultValue": 1,
+        "minValue": 1,
+        "metadata": { "description": "Current number of instances assigned to the resource." }
+      },
+      "storageaccountType": {
+        "type": "string",
+        "defaultValue": "Standard_GRS",
+        "allowedValues": [
+          "Standard_LRS",
+          "Standard_ZRS",
+          "Standard_GRS",
+          "Standard_RAGRS",
+          "Premium_LRS"
+        ]
+      },
+      "cdb_consistencyLevel": {
+        "type": "string",
+        "allowedValues": [
+          "Eventual",
+          "Strong",
+          "Session",
+          "BoundedStaleness"
+        ],
+        "defaultValue": "Strong",
+        "metadata": {
+          "description": "The DocumentDB deault consistency level for this account."
+        }
+      },
+      "cdb_maxStalenessPrefix": {
+        "type": "int",
+        "minValue": 10,
+        "maxValue": 1000,
+        "defaultValue": 10,
+        "metadata": {
+          "description": "When consistencyLevel is set to BoundedStaleness, then this value is required, else it can be ignored."
+        }
+      },
+      "cdb_maxIntervalInSeconds": {
+        "type": "int",
+        "minValue": 5,
+        "maxValue": 600,
+        "defaultValue": 5,
+        "metadata": {
+          "description": "When consistencyLevel is set to BoundedStaleness, then this value is required, else it can be ignored."
+        }
+      }
+    },
+    "variables": {
+      "resourceId": "resourceGroup().id",
+      "appEnv-Svc": "[concat(parameters('deploymentNames').app, parameters('deploymentNames').env, '-', parameters('deploymentNames').svc)]",
+
+      "ws_1_prefix": "-netfx",
+      "ws_1_hp_Name": "[concat(variables('appEnv-Svc'),variables('ws_1_prefix'), '-hp')]",
+      //"ws_1_hp_Id": "[resourceId('Microsoft.Web/serverfarms', variables('ws_1_hp_Name'))]",
+      "ws_1_Name": "[concat(variables('appEnv-Svc'),variables('ws_1_prefix'), '-ws')]",
+      
+      "ws_2_prefix": "-dn10",
+      "ws_2_hp_Name": "[concat(variables('appEnv-Svc'),variables('ws_2_prefix'), '-hp')]",
+      //"ws_2_hp_Id": "[resourceId('Microsoft.Web/serverfarms', variables('ws_2_hp_Name'))]",
+      "ws_2_Name": "[concat(variables('appEnv-Svc'),variables('ws_2_prefix'), '-ws')]",
+
+      "ws_3_prefix": "-dn11",
+      "ws_3_hp_Name": "[concat(variables('appEnv-Svc'),variables('ws_3_prefix'), '-hp')]",
+      //"ws_3_hp_Id": "[resourceId('Microsoft.Web/serverfarms', variables('ws_3_hp_Name'))]",
+      "ws_3_Name": "[concat(variables('appEnv-Svc'),variables('ws_3_prefix'), '-ws')]",
+
+      "ws_4_prefix": "-dn20",
+      "ws_4_hp_Name": "[concat(variables('appEnv-Svc'),variables('ws_4_prefix'), '-hp')]",
+      //"ws_4_hp_Id": "[resourceId('Microsoft.Web/serverfarms', variables('ws_4_hp_Name'))]",
+      "ws_4_Name": "[concat(variables('appEnv-Svc'),variables('ws_4_prefix'), '-ws')]",
+
+      "storageaccountName": "[concat(parameters('deploymentNames').app, parameters('deploymentNames').env,parameters('deploymentNames').svc,'sa')]",
+  
+      "cdb_databaseAccountName": "[concat(variables('appEnv-Svc'),'-', 'cdb')]",
+      "cdb_offerType": "Standard",
+      "cdb_consistencyLevel": "Session",
+      "cdb_maxStalenessPrefix": 100,
+      "cdb_maxIntervalInSeconds": "5",
+  
+      "eventHub_NamespaceName": "[concat(variables('appEnv-Svc'),'-', 'ehnamespace')]",
+      "eventHub_Name_2part": "[concat(variables('appEnv-Svc'),'-2part', '-eh')]",
+      "eventHub_Name_20part": "[concat(variables('appEnv-Svc'),'-20part', '-eh')]",
+      "eventHub_ApiVersion": "2015-08-01",
+      "eventHub_ConsumerGroup_Name":"$Default",
+
+      "search_Name":"[concat(variables('appEnv-Svc'),'-', 'search')]",
+      "search_Location":"East US",
+
+      "eventHub_defaultSASKeyName": "RootManageSharedAccessKey",
+      "eventHub_authRuleResourceId": "[resourceId('Microsoft.EventHub/namespaces/authorizationRules', variables('eventHub_NamespaceName'), variables('eventHub_defaultSASKeyName'))]"
+    },
+    "resources": [
+  
+        // =====================================
+        // hosting Plan 1
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "sku": {
+                "name": "[parameters('web_HostingPlan_SKU_Name')]",
+                "tier": "[parameters('web_HostingPlan_SKU_Tier')]",
+                "size": "[parameters('web_HostingPlan_SKU_Name')]",
+                "family": "[parameters('web_HostingPlan_SKU_Family')]",
+                "capacity": "[parameters('web_HostingPlan_SKU_Capacity')]"
+            },
+            "kind": "app",
+            "name": "[variables('ws_1_hp_Name')]",
+            "apiVersion": "2016-09-01",
+            "location": "[resourceGroup().location]",
+            "scale": null,
+            "properties": {
+                "name": "[variables('ws_1_hp_Name')]",
+                "workerTierName": null,
+                "adminSiteName": null,
+                "hostingEnvironmentProfile": null,
+                "perSiteScaling": false,
+                "reserved": false,
+                "targetWorkerCount": 0,
+                "targetWorkerSizeId": 0
+            },
+            "dependsOn": []
+        },
+        // hosting Plan 2
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "sku": {
+                "name": "[parameters('web_HostingPlan_SKU_Name')]",
+                "tier": "[parameters('web_HostingPlan_SKU_Tier')]",
+                "size": "[parameters('web_HostingPlan_SKU_Name')]",
+                "family": "[parameters('web_HostingPlan_SKU_Family')]",
+                "capacity": "[parameters('web_HostingPlan_SKU_Capacity')]"
+            },
+            "kind": "app",
+            "name": "[variables('ws_2_hp_Name')]",
+            "apiVersion": "2016-09-01",
+            "location": "[resourceGroup().location]",
+            "scale": null,
+            "properties": {
+                "name": "[variables('ws_2_hp_Name')]",
+                "workerTierName": null,
+                "adminSiteName": null,
+                "hostingEnvironmentProfile": null,
+                "perSiteScaling": false,
+                "reserved": false,
+                "targetWorkerCount": 0,
+                "targetWorkerSizeId": 0
+            },
+            "dependsOn": []
+        },
+        // hosting Plan 3
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "sku": {
+                "name": "[parameters('web_HostingPlan_SKU_Name')]",
+                "tier": "[parameters('web_HostingPlan_SKU_Tier')]",
+                "size": "[parameters('web_HostingPlan_SKU_Name')]",
+                "family": "[parameters('web_HostingPlan_SKU_Family')]",
+                "capacity": "[parameters('web_HostingPlan_SKU_Capacity')]"
+            },
+            "kind": "app",
+            "name": "[variables('ws_3_hp_Name')]",
+            "apiVersion": "2016-09-01",
+            "location": "[resourceGroup().location]",
+            "scale": null,
+            "properties": {
+                "name": "[variables('ws_3_hp_Name')]",
+                "workerTierName": null,
+                "adminSiteName": null,
+                "hostingEnvironmentProfile": null,
+                "perSiteScaling": false,
+                "reserved": false,
+                "targetWorkerCount": 0,
+                "targetWorkerSizeId": 0
+            },
+            "dependsOn": []
+        },
+        // hosting Plan 4
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "sku": {
+                "name": "[parameters('web_HostingPlan_SKU_Name')]",
+                "tier": "[parameters('web_HostingPlan_SKU_Tier')]",
+                "size": "[parameters('web_HostingPlan_SKU_Name')]",
+                "family": "[parameters('web_HostingPlan_SKU_Family')]",
+                "capacity": "[parameters('web_HostingPlan_SKU_Capacity')]"
+            },
+            "kind": "app",
+            "name": "[variables('ws_4_hp_Name')]",
+            "apiVersion": "2016-09-01",
+            "location": "[resourceGroup().location]",
+            "scale": null,
+            "properties": {
+                "name": "[variables('ws_4_hp_Name')]",
+                "workerTierName": null,
+                "adminSiteName": null,
+                "hostingEnvironmentProfile": null,
+                "perSiteScaling": false,
+                "reserved": false,
+                "targetWorkerCount": 0,
+                "targetWorkerSizeId": 0
+            },
+            "dependsOn": []
+        },
+    
+    
+        // =====================================
+        // Web Site - 1
+        {
+            "apiVersion": "2015-08-01",
+            "type": "Microsoft.Web/sites",
+            "name": "[variables('ws_1_Name')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "name": "[variables('ws_1_Name')]",
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('ws_1_hp_Name'))]",
+                "siteConfig": {
+                    "alwaysOn": true
+                }
+                //"clientAffinityEnabled": false
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Web/serverfarms/', variables('ws_1_hp_Name'))]"
+            ],
+            "resources": [ ]
+        },
+        // Web Site - 2
+        {
+            "apiVersion": "2015-08-01",
+            "type": "Microsoft.Web/sites",
+            "name": "[variables('ws_2_Name')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "name": "[variables('ws_2_Name')]",
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('ws_2_hp_Name'))]",
+                "siteConfig": {
+                    "alwaysOn": true
+                }
+                //"clientAffinityEnabled": false
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Web/serverfarms/', variables('ws_2_hp_Name'))]"
+            ],
+            "resources": [ ]
+        },
+        // Web Site - 3
+        {
+            "apiVersion": "2015-08-01",
+            "type": "Microsoft.Web/sites",
+            "name": "[variables('ws_3_Name')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "name": "[variables('ws_3_Name')]",
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('ws_3_hp_Name'))]",
+                "siteConfig": {
+                    "alwaysOn": true
+                }
+                //"clientAffinityEnabled": false
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Web/serverfarms/', variables('ws_3_hp_Name'))]"
+            ],
+            "resources": [ ]
+        },
+        // Web Site - 4
+        {
+            "apiVersion": "2015-08-01",
+            "type": "Microsoft.Web/sites",
+            "name": "[variables('ws_4_Name')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "name": "[variables('ws_4_Name')]",
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('ws_4_hp_Name'))]",
+                "siteConfig": {
+                    "alwaysOn": true
+                }
+                //"clientAffinityEnabled": false
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Web/serverfarms/', variables('ws_4_hp_Name'))]"
+            ],
+            "resources": [ ]
+        }
+
+        // // =====================================
+        // // DocDb
+        // {
+        //     "apiVersion": "2015-04-08",
+        //     "type": "Microsoft.DocumentDB/databaseAccounts",
+        //     "kind": "GlobalDocumentDB",
+        //     "name": "[variables('cdb_databaseAccountName')]",
+        //     "location": "[resourceGroup().location]",
+        //     "tags": {
+        //         "defaultExperience": "DocumentDB"
+        //     },
+        //     "properties": {
+        //     "name": "[variables('cdb_databaseAccountName')]",
+        //     "databaseAccountOfferType": "[variables('cdb_offerType')]",
+        //     "consistencyPolicy": {
+        //         "defaultConsistencyLevel": "[variables('cdb_consistencyLevel')]",
+        //         "maxStalenessPrefix": "[variables('cdb_maxStalenessPrefix')]",
+        //         "maxIntervalInSeconds": "[variables('cdb_maxIntervalInSeconds')]"
+        //     },
+        //     "locations": [
+        //         {
+        //         "locationName": "[resourceGroup().location]",
+        //         "failoverPriority": 0
+        //         }
+        //     ]
+        //     }
+        // },
+
+        // // =====================================
+        // // Azure Search
+        // {
+        //     "comments": "Generalized from resource: '/subscriptions/207b47e2-2481-47a6-a631-77bea4314fb9/resourceGroups/datad-netgettest-rg/providers/Microsoft.Search/searchServices/netgettest-as'.",
+        //     "type": "Microsoft.Search/searchServices",
+        //     "sku": {
+        //         "name": "basic"
+        //     },
+        //     "name": "[variables('search_Name')]",
+        //     "apiVersion": "2015-08-19",
+        //     "location": "[variables('search_Location')]",
+        //     "properties": {
+        //         "replicaCount": 1,
+        //         "partitionCount": 1,
+        //         "hostingMode": "Default"
+        //     },
+        //     "dependsOn": []
+        // },
+
+        // // =====================================
+        // // EventHub - Namespace
+        // {
+        //     "type": "Microsoft.EventHub/namespaces",
+        //     "sku": {
+        //         "name": "Standard",
+        //         "tier": "Standard",
+        //         "capacity": 8
+        //     },
+        //     "name": "[variables('eventHub_NamespaceName')]",
+        //     "apiVersion": "2017-04-01",
+        //     "location": "[resourceGroup().location]",
+        //     "tags": {},
+        //     "properties": {
+        //         "isAutoInflateEnabled": true,
+        //         "maximumThroughputUnits": 20,
+        //         "metricId": "[concat('207b47e2-2481-47a6-a631-77bea4314fb9:', variables('eventHub_NamespaceName'))]",
+        //         "serviceBusEndpoint": "[concat('https://', variables('eventHub_NamespaceName'),'.servicebus.windows.net:443/')]"
+        //     },
+        //     "dependsOn": []
+        // },
+        // // EventHub - Actual EventHub - 2 partition
+        // {
+        //     "type": "Microsoft.EventHub/namespaces/eventhubs",
+        //     "name": "[concat(variables('eventHub_NamespaceName'), '/', variables('eventHub_Name_2part'))]",
+        //     "apiVersion": "2017-04-01",
+        //     "location": "[resourceGroup().location]",
+        //     "properties": {
+        //         "messageRetentionInDays": 1,
+        //         "partitionCount": 2,
+        //         "partitionIds": ["0","1"]
+        //     },
+        //     "dependsOn": [
+        //         "[resourceId('Microsoft.EventHub/namespaces', variables('eventHub_NamespaceName'))]"
+        //     ]
+        // },
+        // // EventHub - Actual EventHub - 20 partition
+        // {
+        //     "comments": "Generalized from resource: '/subscriptions/207b47e2-2481-47a6-a631-77bea4314fb9/resourcegroups/datad-netgettest-rg/providers/Microsoft.EventHub/namespaces/netgettest-eh/eventhubs/netgettest20-eh'.",
+        //     "type": "Microsoft.EventHub/namespaces/eventhubs",
+        //     "name": "[concat(variables('eventHub_NamespaceName'), '/', parameters('eventHub_Name_20part'))]",
+        //     "apiVersion": "2017-04-01",
+        //     "location": "[resourceGroup().location]",
+        //     "scale": null,
+        //     "properties": {
+        //         "messageRetentionInDays": 1,
+        //         "partitionCount": 20,
+        //         "partitionIds": [ "0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19" ]
+        //     },
+        //     "dependsOn": [
+        //         "[resourceId('Microsoft.EventHub/namespaces', variables('eventHub_NamespaceName'))]"
+        //     ]
+        // },
+        // // EventHub - Auth Rules
+        // {
+        //     "type": "Microsoft.EventHub/namespaces/AuthorizationRules",
+        //     "name": "[concat(variables('eventHub_NamespaceName'), '/', parameters('AuthorizationRules_RootManageSharedAccessKey_name'))]",
+        //     "apiVersion": "2017-04-01",
+        //     "location": "[resourceGroup().location]",
+        //     "properties": {
+        //         "rights": [
+        //             "Listen",
+        //             "Manage",
+        //             "Send"
+        //         ]
+        //     },
+        //     "dependsOn": [
+        //         "[resourceId('Microsoft.EventHub/namespaces', variables('eventHub_NamespaceName'))]"
+        //     ]
+        // },
+        // // EventHub - Auth Rules
+        // {
+        //     "type": "Microsoft.EventHub/namespaces/eventhubs/authorizationRules",
+        //     "name": "[concat(variables('eventHub_NamespaceName'), '/', parameters('eventHub_Name_2part'), '/', parameters('authorizationRules_SendPolicy_name'))]",
+        //     "apiVersion": "2017-04-01",
+        //     "location": "[resourceGroup().location]",
+        //     "properties": {
+        //         "rights": [
+        //             "Send"
+        //         ]
+        //     },
+        //     "dependsOn": [
+        //         "[resourceId('Microsoft.EventHub/namespaces', variables('eventHub_NamespaceName'))]",
+        //         "[resourceId('Microsoft.EventHub/namespaces/eventhubs', variables('eventHub_NamespaceName'), parameters('eventHub_Name_2part'))]"
+        //     ]
+        // },
+        // // EventHub - Auth Rules
+        // {
+        //     "type": "Microsoft.EventHub/namespaces/eventhubs/authorizationRules",
+        //     "name": "[concat(variables('eventHub_NamespaceName'), '/', parameters('eventHub_Name_20part'), '/', parameters('authorizationRules_SendPolicy_name_1'))]",
+        //     "apiVersion": "2017-04-01",
+        //     "location": "[resourceGroup().location]",
+        //     "properties": {
+        //         "rights": [
+        //             "Send"
+        //         ]
+        //     },
+        //     "dependsOn": [
+        //         "[resourceId('Microsoft.EventHub/namespaces', variables('eventHub_NamespaceName'))]",
+        //         "[resourceId('Microsoft.EventHub/namespaces/eventhubs', variables('eventHub_NamespaceName'), parameters('eventHub_Name_20part'))]"
+        //     ]
+        // },
+
+        // // EventHub - Consumer Groups
+        // {
+        //     "type": "Microsoft.EventHub/namespaces/eventhubs/consumergroups",
+        //     "name": "[concat(variables('eventHub_NamespaceName'), '/', parameters('eventHub_Name_2part'), '/', parameters('consumergroups_$Default_name'))]",
+        //     "apiVersion": "2017-04-01",
+        //     "location": "[resourceGroup().location]",
+        //     "properties": {
+        //     },
+        //     "dependsOn": [
+        //         "[resourceId('Microsoft.EventHub/namespaces', variables('eventHub_NamespaceName'))]",
+        //         "[resourceId('Microsoft.EventHub/namespaces/eventhubs', variables('eventHub_NamespaceName'), parameters('eventHub_Name_2part'))]"
+        //     ]
+        // },
+
+        // // EventHub - Consumer Groups
+        // {
+        //     "type": "Microsoft.EventHub/namespaces/eventhubs/consumergroups",
+        //     "name": "[concat(variables('eventHub_NamespaceName'), '/', parameters('eventHub_Name_20part'), '/', parameters('consumergroups_$Default_name_1'))]",
+        //     "apiVersion": "2017-04-01",
+        //     "location": "[resourceGroup().location]",
+        //     "properties": { },
+        //     "dependsOn": [
+        //         "[resourceId('Microsoft.EventHub/namespaces', variables('eventHub_NamespaceName'))]",
+        //         "[resourceId('Microsoft.EventHub/namespaces/eventhubs', variables('eventHub_NamespaceName'), parameters('eventHub_Name_20part'))]"
+        //     ]
+        // },
+
+    ],
+    "outputs":{  
+        // "NamespaceConnectionString":{  
+        //    "type":"string",
+        //    "value":"[listkeys(variables('eventHub_authRuleResourceId'), variables('eventHub_ApiVersion')).primaryConnectionString]"
+        // },
+        // "SharedAccessPolicyPrimaryKey":{  
+        //    "type":"string",
+        //    "value":"[listkeys(variables('eventHub_authRuleResourceId'), variables('eventHub_ApiVersion')).primaryKey]"
+        // }
+     }
+  }
+
+
+        
